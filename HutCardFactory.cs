@@ -38,11 +38,11 @@ public class HutCardFactory
         return await CreateNonPlayerCard(owner, (uint)Random.Next(6200000, 6200005 + 1), CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM);
     }
 
-    public static async Task<CardData> CreateRandomJerseyCard(long owner, bool? isHome = null, bool? isRare = null)
+    public static async Task<CardData> CreateRandomJerseyCard(long owner, bool? isAway = null, bool? isRare = null)
     {
-        var cardDbIds = await UltimateDatabase.GetKitCards(isHome, isRare);
+        var cardDbIds = await UltimateDatabase.GetKitCards(isAway, isRare);
         var kit = cardDbIds[Random.Next(cardDbIds.Count)];
-        return await CreateNonPlayerCard(owner, kit.CardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT, (byte)(kit.IsHome ? 1 : 0));
+        return await CreateNonPlayerCard(owner, kit.CardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT, (byte)(kit.IsAway ? 1 : 0));
     }
     
     public static async Task<CardData> RollPlayerCard(long owner, List<CardData> alreadyRolled, Range overall, bool guaranteeUnique, params CardSubType[] subTypes)

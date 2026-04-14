@@ -1,6 +1,6 @@
 using System.Text;
 using Npgsql;
-using Zamboni11;
+using ZamboniUltimateTeam.Card;
 using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam;
@@ -333,22 +333,22 @@ public class UltimateDatabase
         throw new Exception();
     }
 
-    public static async Task<List<HutKitCard>> GetKitCards(bool? isHome, bool? isRare)
+    public static async Task<List<HutKitCard>> GetKitCards(bool? isAway, bool? isRare)
     {
         await using var conn = new NpgsqlConnection(ConnectionString);
         await conn.OpenAsync();
 
         var sql = new StringBuilder(@"
-            SELECT carddbid, alternative, teamid, ishome
+            SELECT carddbid, alternative, teamid, isaway
             FROM fcc_kitcards
             WHERE 1=1");
 
-        if (isHome.HasValue) sql.Append(" AND ishome=@ishome");
+        if (isAway.HasValue) sql.Append(" AND isaway=@isaway");
         if (isRare.HasValue) sql.Append(" AND alternative=@israre");
 
         await using var command = new NpgsqlCommand(sql.ToString(), conn);
 
-        if (isHome.HasValue) command.Parameters.AddWithValue("ishome", isHome.Value);
+        if (isAway.HasValue) command.Parameters.AddWithValue("isaway", isAway.Value);
         if (isRare.HasValue) command.Parameters.AddWithValue("israre", isRare.Value);
 
         await using var reader = await command.ExecuteReaderAsync();
@@ -362,7 +362,7 @@ public class UltimateDatabase
                 CardDbId = (uint)reader.GetInt64(0),
                 Alternative = reader.GetBoolean(1),
                 TeamId = reader.GetInt32(2),
-                IsHome = reader.GetBoolean(3),
+                IsAway = reader.GetBoolean(3),
             });
         }
 

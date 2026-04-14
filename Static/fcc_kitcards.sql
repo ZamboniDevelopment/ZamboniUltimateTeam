@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict PEeHvLenxlNICvuJwHF4pVcGdaExf60wsoWpIscFf02oPWkroS7dJ8ddQB7s8WE
+\restrict rWd7I5d88qaKaBTjOLGJco8BKooaRgeAxef0z2t6Ea8WbTbmqC1PqQ5olYPQMsj
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -28,10 +28,10 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.fcc_kitcards (
-    carddbid bigint,
+    carddbid integer,
     alternative boolean,
     teamid integer,
-    ishome boolean
+    isaway boolean
 );
 
 
@@ -41,7 +41,7 @@ ALTER TABLE public.fcc_kitcards OWNER TO postgres;
 -- Data for Name: fcc_kitcards; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.fcc_kitcards (carddbid, alternative, teamid, ishome) FROM stdin;
+COPY public.fcc_kitcards (carddbid, alternative, teamid, isaway) FROM stdin;
 6300000	f	0	f
 6300001	f	1	f
 6300002	f	2	f
@@ -669,5 +669,5 @@ COPY public.fcc_kitcards (carddbid, alternative, teamid, ishome) FROM stdin;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict PEeHvLenxlNICvuJwHF4pVcGdaExf60wsoWpIscFf02oPWkroS7dJ8ddQB7s8WE
+\unrestrict rWd7I5d88qaKaBTjOLGJco8BKooaRgeAxef0z2t6Ea8WbTbmqC1PqQ5olYPQMsj
 

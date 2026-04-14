@@ -1,6 +1,5 @@
 using Blaze3SDK;
 using BlazeCommon;
-using Zamboni11;
 using ZamboniUltimateTeam.Requests;
 using ZamboniUltimateTeam.Responses;
 using ZamboniUltimateTeam.Structs;
@@ -639,14 +638,14 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_KITS_HOME,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, 1, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, 0, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_KITS_AWAY,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, 0, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, 1, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
             });
             stats.Add(new StickerBookStatResult
             {

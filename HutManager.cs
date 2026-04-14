@@ -1,7 +1,6 @@
 using System.Text;
 using NLog;
 using Npgsql;
-using Zamboni11;
 using ZamboniUltimateTeam.Requests;
 using ZamboniUltimateTeam.Structs;
 

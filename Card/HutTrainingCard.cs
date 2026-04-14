@@ -1,4 +1,4 @@
-namespace Zamboni11;
+namespace ZamboniUltimateTeam.Card;
 
 public class HutTrainingCard
 {

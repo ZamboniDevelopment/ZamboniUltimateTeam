@@ -3,7 +3,6 @@ using System.Text;
 using Blaze3SDK;
 using BlazeCommon;
 using Npgsql;
-using Zamboni11;
 using ZamboniUltimateTeam.Requests;
 using ZamboniUltimateTeam.Responses;
 using ZamboniUltimateTeam.Structs;
