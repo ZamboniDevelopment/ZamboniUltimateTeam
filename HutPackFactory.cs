@@ -1,10 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ZamboniUltimateTeam;
 using ZamboniUltimateTeam.Structs;
 
-namespace Zamboni11;
+namespace ZamboniUltimateTeam;
 
 public class HutPackFactory
 {
