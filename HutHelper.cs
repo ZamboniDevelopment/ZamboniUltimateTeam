@@ -66,7 +66,7 @@ public class HutHelper
             mOfferPendingCount = (int)await HutTradeManager.ActiveOffersCount(reader.GetInt64(reader.GetOrdinal("trade_id"))),
         };
     }
-    
+
     public static async Task<List<int>> GetAllLeagueIds()
     {
         var leagueIds = new List<int>();
@@ -86,15 +86,15 @@ public class HutHelper
 
         return leagueIds;
     }
-    
-    public static async Task<List<int>> GetAllTrainingCardIds()
+
+    public static async Task<List<int>> GetAllDistinctCardDbIds(string tableName)
     {
         var trainingCardIds = new List<int>();
 
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
-        const string sql = "SELECT DISTINCT carddbid FROM fcc_trainingcards";
+        var sql = "SELECT DISTINCT carddbid FROM " + tableName + " ORDER BY carddbid";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -106,7 +106,7 @@ public class HutHelper
 
         return trainingCardIds;
     }
-    
+
     public static async Task<ISOfferInfo> ReadOffer(NpgsqlDataReader reader)
     {
         var cardDataList = new List<CardData>();
@@ -115,6 +115,7 @@ public class HutHelper
             var cardData = await HutManager.GetCard(cardId);
             cardDataList.Add(cardData.Card);
         }
+
         return new ISOfferInfo
         {
             mCardList = reader.GetFieldValue<long[]>(reader.GetOrdinal("card_ids")).ToList(),
@@ -228,5 +229,4 @@ public class HutHelper
     {
         return cardDatas.Select(card => card.mCardId).ToList();
     }
-
 }

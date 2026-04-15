@@ -12,17 +12,21 @@ public class HutCardFactory
 
     public static async Task<CardData> CreateRandomHeadCoachCard(long owner)
     {
-        return await CreateNonPlayerCard(owner, (uint)Random.Next(2000000, 2000025 + 1), CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH);
+        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_headcoachcards");
+        var cardDbId = list[Random.Next(list.Count)];
+        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH);
     }
 
     public static async Task<CardData> CreateRandomContractCard(long owner)
     {
-        return await CreateNonPlayerCard(owner, (uint)Random.Next(5001001, 5001011 + 1), CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER);
+        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_contractcards");
+        var cardDbId = list[Random.Next(list.Count)];
+        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER);
     }
 
     public static async Task<CardData> CreateRandomTrainingCard(long owner)
     {
-        var list = await HutHelper.GetAllTrainingCardIds();
+        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_trainingcards");
         var cardDbId = list[Random.Next(list.Count)];
         var trainingCard = await UltimateDatabase.GetTrainingCardByDbIdAsync((uint)cardDbId);
         return await CreateNonPlayerCard(owner, (uint)cardDbId, (CardSubType)trainingCard.CardSubtype);
@@ -30,12 +34,16 @@ public class HutCardFactory
 
     public static async Task<CardData> CreateRandomLogoCard(long owner)
     {
-        return await CreateNonPlayerCard(owner, (uint)Random.Next(6000000, 6000211 + 1), CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE);
+        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_badges");
+        var cardDbId = list[Random.Next(list.Count)];
+        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE);
     }
 
     public static async Task<CardData> CreateRandomStadiumCard(long owner)
     {
-        return await CreateNonPlayerCard(owner, (uint)Random.Next(6200000, 6200005 + 1), CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM);
+        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_stadium");
+        var cardDbId = list[Random.Next(list.Count)];
+        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM);
     }
 
     public static async Task<CardData> CreateRandomJerseyCard(long owner, bool? isAway = null, bool? isRare = null)
