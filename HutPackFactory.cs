@@ -58,15 +58,9 @@ public class HutPackFactory
             }
             case PackType.CARDHOUSE_CARD_PACK_TYPE_PEEWEE:
             {
-                cardDataList.Add(await HutCardFactory.CreatePlayerCard(userId, 3673));
-                cardDataList.Add(await HutCardFactory.CreateNonPlayerCard(userId, 6300004, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT));
-                cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId, false, false));
-                cardDataList.Add(await HutCardFactory.CreateNonPlayerCard(userId, 5003004, CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_HIGH));
-                cardDataList.Add(await HutCardFactory.CreateRandomLogoCard(userId));
-                cardDataList.Add(await HutCardFactory.CreateRandomContractCard(userId));
-                cardDataList.Add(await HutCardFactory.CreateRandomStadiumCard(userId));
-                cardDataList.Add(await HutCardFactory.CreateRandomHeadCoachCard(userId));
-
+                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(0, 85), true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C));
+                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(0, 85), true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LD));
+                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(0, 85), true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_GK));
                 return cardDataList;
             }
             default: throw new NotImplementedException();
