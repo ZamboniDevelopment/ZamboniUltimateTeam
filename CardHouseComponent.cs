@@ -418,7 +418,8 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C,
         CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LW,
         CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RW,
-        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D,
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LD,
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RD,
         CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_GK
     };
 

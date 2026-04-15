@@ -415,7 +415,7 @@ public class HutManager()
         string sql = @"
             SELECT h.team_id, COUNT(*) 
             FROM hut_cards h
-            INNER JOIN fcc_leagues l ON h.team_id = l.teamid
+            INNER JOIN fcc12_leagues l ON h.team_id = l.teamid
             WHERE h.user_id = @user_id 
             AND l.leagueid = @league_id 
             AND h.deck_type = @deck_type";
@@ -519,7 +519,7 @@ public class HutManager()
 
         var sql = new StringBuilder(@"
             SELECT h.* FROM hut_cards h
-            INNER JOIN fcc_leagues l ON h.team_id = l.teamid
+            INNER JOIN fcc12_leagues l ON h.team_id = l.teamid
             WHERE h.user_id = @user_id 
             AND h.deck_type = @deck_type");
 

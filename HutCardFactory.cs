@@ -30,12 +30,12 @@ public class HutCardFactory
 
     public static async Task<CardData> CreateRandomLogoCard(long owner)
     {
-        return await CreateNonPlayerCard(owner, (uint)Random.Next(6000000, 6000211 + 1), CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE);
+        return await CreateNonPlayerCard(owner, (uint)Random.Next(6000000, 6000209 + 1), CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE);
     }
 
     public static async Task<CardData> CreateRandomStadiumCard(long owner)
     {
-        return await CreateNonPlayerCard(owner, (uint)Random.Next(6200000, 6200005 + 1), CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM);
+        return await CreateNonPlayerCard(owner, (uint)Random.Next(6200000, 6200006 + 1), CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM);
     }
 
     public static async Task<CardData> CreateRandomJerseyCard(long owner, bool? isAway = null, bool? isRare = null)
@@ -56,7 +56,7 @@ public class HutCardFactory
 
         string sql = @"
             SELECT carddbid 
-            FROM fcc_playercards p
+            FROM fcc12_playercards p
             WHERE preferredposition = ANY(@subTypes) 
             AND rating >= @overallStart AND rating <= @overallEnd 
             AND NOT (carddbid = ANY(@excludeIds))
@@ -95,9 +95,9 @@ public class HutCardFactory
         await conn.OpenAsync();
 
         const string sql = @"
-        SELECT teamid FROM fcc_badges WHERE carddbid = @carddbid
+        SELECT teamid FROM fcc12_badges WHERE carddbid = @carddbid
         UNION ALL
-        SELECT teamid FROM fcc_kitcards WHERE carddbid = @carddbid
+        SELECT teamid FROM fcc12_kitcards WHERE carddbid = @carddbid
         LIMIT 1;";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
