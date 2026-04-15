@@ -74,7 +74,7 @@ public class HutHelper
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
-        const string sql = "SELECT DISTINCT leagueid FROM fcc12_leagues ORDER BY leagueid ASC";
+        const string sql = "SELECT DISTINCT leagueid FROM fcc_leagues ORDER BY leagueid ASC";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -94,7 +94,7 @@ public class HutHelper
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
-        const string sql = "SELECT DISTINCT carddbid FROM fcc12_trainingcards";
+        const string sql = "SELECT DISTINCT carddbid FROM fcc_trainingcards";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
         await using var reader = await cmd.ExecuteReaderAsync();

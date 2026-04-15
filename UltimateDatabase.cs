@@ -226,7 +226,7 @@ public class UltimateDatabase
 
     public static async Task<CardData?> GetPlayerCardDataByDbId(uint cardDbId)
     {
-        const string sql = "SELECT * FROM fcc12_playercards WHERE carddbid = @dbid LIMIT 1";
+        const string sql = "SELECT * FROM fcc_playercards WHERE carddbid = @dbid LIMIT 1";
 
         await using var conn = new NpgsqlConnection(ConnectionString);
         await conn.OpenAsync();
@@ -279,7 +279,7 @@ public class UltimateDatabase
 
     public static async Task<HutTrainingCard> GetTrainingCardByDbIdAsync(uint cardDbId)
     {
-        const string sql = "SELECT * FROM fcc12_trainingcards WHERE carddbid = @cardDbId";
+        const string sql = "SELECT * FROM fcc_trainingcards WHERE carddbid = @cardDbId";
 
         await using var conn = new NpgsqlConnection(ConnectionString);
         await conn.OpenAsync();
@@ -310,7 +310,7 @@ public class UltimateDatabase
 
     public static async Task<HutContractCard> GetContractCardByDbIdAsync(uint cardDbId)
     {
-        const string sql = "SELECT * FROM fcc12_contractcards WHERE carddbid = @cardDbId";
+        const string sql = "SELECT * FROM fcc_contractcards WHERE carddbid = @cardDbId";
 
         await using var conn = new NpgsqlConnection(ConnectionString);
         await conn.OpenAsync();
@@ -340,7 +340,7 @@ public class UltimateDatabase
 
         var sql = new StringBuilder(@"
             SELECT carddbid, alternative, teamid, isaway
-            FROM fcc12_kitcards
+            FROM fcc_kitcards
             WHERE 1=1");
 
         if (isAway.HasValue) sql.Append(" AND isaway=@isaway");

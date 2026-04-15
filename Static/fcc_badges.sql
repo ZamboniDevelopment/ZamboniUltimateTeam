@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict 6K9BVHvn0gTa41EnSDvbIxvhNYqIqWjXiHzywXCCu4Yy1kytgxzfhdRHexah28j
+\restrict Ats2IrexUaVcungbqXCiOa4Y3NBZcd0yuEzs6gkXLJMMFjR6KDB39SiyGv2tET5
 
--- Dumped from database version 18.3
--- Dumped by pg_dump version 18.3
+-- Dumped from database version 18.2
+-- Dumped by pg_dump version 18.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -24,22 +24,22 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: fcc12_badges; Type: TABLE; Schema: public; Owner: postgres
+-- Name: fcc_badges; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.fcc12_badges (
+CREATE TABLE public.fcc_badges (
     carddbid bigint,
     teamid integer
 );
 
 
-ALTER TABLE public.fcc12_badges OWNER TO postgres;
+ALTER TABLE public.fcc_badges OWNER TO postgres;
 
 --
--- Data for Name: fcc12_badges; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: fcc_badges; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.fcc12_badges (carddbid, teamid) FROM stdin;
+COPY public.fcc_badges (carddbid, teamid) FROM stdin;
 6000000	0
 6000001	1
 6000002	2
@@ -250,6 +250,8 @@ COPY public.fcc12_badges (carddbid, teamid) FROM stdin;
 6000207	207
 6000208	208
 6000209	209
+6000210	210
+6000211	211
 \.
 
 
@@ -257,5 +259,5 @@ COPY public.fcc12_badges (carddbid, teamid) FROM stdin;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 6K9BVHvn0gTa41EnSDvbIxvhNYqIqWjXiHzywXCCu4Yy1kytgxzfhdRHexah28j
+\unrestrict Ats2IrexUaVcungbqXCiOa4Y3NBZcd0yuEzs6gkXLJMMFjR6KDB39SiyGv2tET5
 

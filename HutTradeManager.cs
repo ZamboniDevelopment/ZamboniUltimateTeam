@@ -28,7 +28,7 @@ public class HutTradeManager
                    GREATEST(0, (t.created_at_seconds + t.duration_seconds) - EXTRACT(EPOCH FROM NOW()))::INT AS expire_time
             FROM hut_trade_info t
             INNER JOIN hut_cards c ON t.card_id = c.card_id
-            INNER JOIN fcc12_leagues l ON c.team_id = l.teamid
+            INNER JOIN fcc_leagues l ON c.team_id = l.teamid
             WHERE 1=1");
 
         switch (request.mCardType)

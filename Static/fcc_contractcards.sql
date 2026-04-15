@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict hmzYfTarZconaTSGvUGUQ4Wge0atM4WpnGSwfp8m8oZwTW9mLZYnct7dGH0kRX1
+\restrict imJuQ5PYg8RqT0Bvz1ieovgJja5aL5JYYTOZ36xDCf2tPcYL2Swhlqxikcgj1m5
 
--- Dumped from database version 18.3
--- Dumped by pg_dump version 18.3
+-- Dumped from database version 18.1
+-- Dumped by pg_dump version 18.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -24,23 +24,23 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: fcc12_contractcards; Type: TABLE; Schema: public; Owner: postgres
+-- Name: fcc_contractcards; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.fcc12_contractcards (
+CREATE TABLE public.fcc_contractcards (
     carddbid integer,
     weightrare integer,
     value integer
 );
 
 
-ALTER TABLE public.fcc12_contractcards OWNER TO postgres;
+ALTER TABLE public.fcc_contractcards OWNER TO postgres;
 
 --
--- Data for Name: fcc12_contractcards; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: fcc_contractcards; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.fcc12_contractcards (carddbid, weightrare, value) FROM stdin;
+COPY public.fcc_contractcards (carddbid, weightrare, value) FROM stdin;
 5001001	0	8
 5001002	0	9
 5001003	0	10
@@ -59,5 +59,5 @@ COPY public.fcc12_contractcards (carddbid, weightrare, value) FROM stdin;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict hmzYfTarZconaTSGvUGUQ4Wge0atM4WpnGSwfp8m8oZwTW9mLZYnct7dGH0kRX1
+\unrestrict imJuQ5PYg8RqT0Bvz1ieovgJja5aL5JYYTOZ36xDCf2tPcYL2Swhlqxikcgj1m5
 
