@@ -1,4 +1,5 @@
 using Blaze3SDK;
+using Blaze3SDK.Blaze.Example;
 using BlazeCommon;
 using ZamboniUltimateTeam.Requests;
 using ZamboniUltimateTeam.Responses;
@@ -1153,6 +1154,39 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mActiveCards = activeCards,
             mSquadInfo = squadInfo.Value,
             mTargetUserId = request.mTargetUserId,
+        };
+    }
+    
+    public override async Task<SquadSearchResponse> SquadSearchAsync(SquadSearchRequest request, BlazeRpcContext context)
+    {
+        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+        return new SquadSearchResponse
+        {
+            mResultList = await HutManager.GetAllSquadsAsOfflineOpponents(userId)
+        };
+    }
+    
+    public override async Task<SquadLoadResponse> SquadLoadAsync(SquadLoadRequest request, BlazeRpcContext context)
+    {
+        var squadInfoPromise = await HutManager.GetSquadInfo(request.mUserId);
+        var squadInfo = squadInfoPromise.Value;
+        return new SquadLoadResponse
+        {
+            mChemistry = (int)squadInfo.mChemistry,
+            mCHNG = (int)squadInfo.mCHNG,
+            mFormation = (int)squadInfo.mFormationId,
+            mJERA = squadInfo.mJERA,
+            mJERH = squadInfo.mJERH,
+            mLines = squadInfo.mLines,
+            mLogoCardDbId = squadInfo.mLogoCardDbId,
+            mManager = squadInfo.mManager,
+            mTeamName = squadInfo.mSquadName,
+            mPlayers = squadInfo.mPlayers,
+            mStarRating = (int)squadInfo.mStarRating,
+            mSquadId = 0,
+            mSTAD = 0,
+            mTeamAbbreviation = squadInfo.mTeamAbbreviation,
+            mUserId = request.mUserId
         };
     }
 

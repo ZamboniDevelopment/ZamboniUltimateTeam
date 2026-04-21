@@ -1,4 +1,5 @@
 using Blaze3SDK;
+using Blaze3SDK.Blaze.Example;
 using BlazeCommon;
 using NLog;
 using ZamboniUltimateTeam.Requests;
@@ -34,9 +35,11 @@ public static class CardHouseComponentBase
         ISOfferTrade = 704,
         ISGetOffers = 705,
         ISAdminOffer = 706,
+        squadLoad = 707,
         squadSave = 708,
         getSquadList = 709,
         squadLoadActive = 711,
+        squadSearch = 713,
         stickerBookStats2 = 800,
         stickerBookSearch = 802,
         activateCard = 803,
@@ -85,6 +88,8 @@ public static class CardHouseComponentBase
             CardHouseComponentCommand.getSquadList => typeof(NumericRequest),
             CardHouseComponentCommand.stickerBookCard => typeof(StickerBookCardRequest),
             CardHouseComponentCommand.squadLoadActive => typeof(SquadLoadActiveRequest),
+            CardHouseComponentCommand.squadSearch => typeof(SquadSearchRequest),
+            CardHouseComponentCommand.squadLoad => typeof(SquadLoadRequest),
             CardHouseComponentCommand.stickerBookStats2 => typeof(StickerBookStats2Request),
             CardHouseComponentCommand.stickerBookSearch => typeof(StickerBookSearchRequest),
             CardHouseComponentCommand.activateCard => typeof(ActivateCardRequest),
@@ -133,6 +138,8 @@ public static class CardHouseComponentBase
             CardHouseComponentCommand.getSquadList => typeof(SquadListResponse),
             CardHouseComponentCommand.stickerBookCard => typeof(StickerBookCardResponse),
             CardHouseComponentCommand.squadLoadActive => typeof(SquadLoadActiveResponse),
+            CardHouseComponentCommand.squadSearch => typeof(SquadSearchResponse),
+            CardHouseComponentCommand.squadLoad => typeof(SquadLoadResponse),
             CardHouseComponentCommand.stickerBookStats2 => typeof(StickerBookStats2Response),
             CardHouseComponentCommand.stickerBookSearch => typeof(StickerBookSearchResponse),
             CardHouseComponentCommand.activateCard => typeof(ActivateCardResponse),
@@ -298,6 +305,18 @@ public static class CardHouseComponentBase
 
         [BlazeCommand((ushort)CardHouseComponentCommand.squadLoadActive)]
         public virtual Task<SquadLoadActiveResponse> SquadLoadActiveAsync(SquadLoadActiveRequest request, BlazeRpcContext context)
+        {
+            throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
+        }
+        
+        [BlazeCommand((ushort)CardHouseComponentCommand.squadSearch)]
+        public virtual Task<SquadSearchResponse> SquadSearchAsync(SquadSearchRequest request, BlazeRpcContext context)
+        {
+            throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
+        }
+        
+        [BlazeCommand((ushort)CardHouseComponentCommand.squadLoad)]
+        public virtual Task<SquadLoadResponse> SquadLoadAsync(SquadLoadRequest request, BlazeRpcContext context)
         {
             throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
         }
@@ -711,8 +730,7 @@ public static class CardHouseComponentBase
         {
             return Connection.SendRequestAsync<StickerBookSearchRequest, StickerBookSearchResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.stickerBookSearch, request);
         }
-
-
+        
         public StickerBookStats2Response GetStickerBookStats2(StickerBookStats2Request request)
         {
             return Connection.SendRequest<StickerBookStats2Request, StickerBookStats2Response, NullStruct>(this, (ushort)CardHouseComponentCommand.stickerBookStats2, request);
@@ -731,6 +749,26 @@ public static class CardHouseComponentBase
         public Task<SquadLoadActiveResponse> SquadLoadActiveAsync(SquadLoadActiveRequest request)
         {
             return Connection.SendRequestAsync<SquadLoadActiveRequest, SquadLoadActiveResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.squadLoadActive, request);
+        }
+        
+        public SquadSearchResponse SquadSearch(SquadSearchRequest request)
+        {
+            return Connection.SendRequest<SquadSearchRequest, SquadSearchResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.squadSearch, request);
+        }
+
+        public Task<SquadSearchResponse> SquadSearchAsync(SquadSearchRequest request)
+        {
+            return Connection.SendRequestAsync<SquadSearchRequest, SquadSearchResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.squadSearch, request);
+        }
+        
+        public SquadLoadResponse SquadLoad(SquadLoadRequest request)
+        {
+            return Connection.SendRequest<SquadLoadRequest, SquadLoadResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.squadLoad, request);
+        }
+
+        public Task<SquadLoadResponse> SquadLoadAsync(SquadLoadRequest request)
+        {
+            return Connection.SendRequestAsync<SquadLoadRequest, SquadLoadResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.squadLoad, request);
         }
 
         public UserReliabilityInfoResponse GetUserReliabilityRequest(NumericRequest request)

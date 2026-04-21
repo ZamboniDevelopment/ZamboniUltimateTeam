@@ -1,18 +1,19 @@
 using Tdf;
+using ZamboniUltimateTeam.Structs;
 
-namespace ZamboniUltimateTeam.Structs;
+namespace ZamboniUltimateTeam.Responses;
 
 [TdfStruct]
-public struct SquadInfo
+public struct SquadLoadResponse
 {
     [TdfMember("CHEM")] 
-    public uint mChemistry;
-    
+    public int mChemistry;
+
     [TdfMember("CHNG")] 
-    public uint mCHNG;
+    public int mCHNG;
     
     [TdfMember("FORM")] 
-    public uint mFormationId;
+    public int mFormation;
     
     [TdfMember("JERA")] 
     public int mJERA;
@@ -30,21 +31,24 @@ public struct SquadInfo
     public CardData mManager;
     
     [TdfMember("NAME")] 
-    public string mSquadName;
-
+    public string mTeamName;
+    
     [TdfMember("PLRS")] 
     public List<CardData> mPlayers;
     
     [TdfMember("RTNG")] 
-    public uint mStarRating;
+    public int mStarRating;
     
     [TdfMember("SQID")] 
-    public uint mSquadId;
+    public int mSquadId;
     
     [TdfMember("STAD")] 
     public int mSTAD;
     
     [TdfMember("TMAB")] 
     public string mTeamAbbreviation;
+    
+    [TdfMember("UID")] 
+    public long mUserId;
     
 }
