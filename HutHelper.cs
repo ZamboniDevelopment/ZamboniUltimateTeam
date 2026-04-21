@@ -4,7 +4,7 @@ using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam;
 
-public class HutHelper
+public static class HutHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

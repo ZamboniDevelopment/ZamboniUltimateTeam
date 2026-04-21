@@ -5,7 +5,7 @@ using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam;
 
-public class UltimateDatabase
+public static class UltimateDatabase
 {
     public static string? ConnectionString;
 
@@ -23,6 +23,8 @@ public class UltimateDatabase
         CreateHutCardsTable();
 
         CreateHutTournamentsTable();
+        
+        CreateHutNameReservationsTable();
     }
 
     private static void CreateHutGeneralInfoTable()
@@ -159,6 +161,26 @@ public class UltimateDatabase
                     active BOOLEAN,
                     tournament_data BYTEA,
                     PRIMARY KEY (user_id, tournament_type)
+                );";
+
+        using var cmd = new NpgsqlCommand(createTableQuery, conn);
+        cmd.ExecuteNonQuery();
+    }
+        
+    private static void CreateHutNameReservationsTable()
+    {
+        using var conn = new NpgsqlConnection(ConnectionString);
+        conn.Open();
+
+        const string createTableQuery = @"
+                CREATE TABLE IF NOT EXISTS hut_name_reservations (
+                    user_id BIGINT,
+                    user_name VARCHAR,
+                    team_name VARCHAR,
+                    team_abbreviation VARCHAR,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    deleted_at TIMESTAMP,
+                    set_free BOOLEAN DEFAULT false
                 );";
 
         using var cmd = new NpgsqlCommand(createTableQuery, conn);

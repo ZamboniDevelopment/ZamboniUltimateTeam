@@ -3,7 +3,7 @@ using ZamboniUltimateTeam.Requests;
 
 namespace ZamboniUltimateTeam;
 
-public class HutTournamentManager
+public static class HutTournamentManager
 {
 
     public static async Task SaveTournament(TournamentSaveDataRequest request, long userId)

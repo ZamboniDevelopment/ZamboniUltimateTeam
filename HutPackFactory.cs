@@ -2,7 +2,7 @@ using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam;
 
-public class HutPackFactory
+public static class HutPackFactory
 {
     public static async Task<List<CardData>> CreatePack(long userId, PackType packType)
     {
