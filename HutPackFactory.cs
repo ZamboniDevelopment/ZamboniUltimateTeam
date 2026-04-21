@@ -18,7 +18,7 @@ public static class HutPackFactory
 
                 cardDataList.Add(await HutCardFactory.CreateRandomLogoCard(userId));
 
-                cardDataList.Add(await HutCardFactory.CreateRandomStadiumCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateNonPlayerCard(userId, 6200000, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM));
 
                 // cardDataList.Add(await HutCardFactory.CreateRandomTrainingCard(userId));
 
