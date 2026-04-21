@@ -357,6 +357,32 @@ public static class UltimateDatabase
 
         throw new Exception();
     }
+    
+    public static async Task<HealingCard> GetHealingCardByDbIdAsync(uint cardDbId)
+    {
+        const string sql = "SELECT * FROM fcc_healingcards WHERE carddbid = @cardDbId";
+
+        await using var conn = new NpgsqlConnection(ConnectionString);
+        await conn.OpenAsync();
+
+        await using var command = new NpgsqlCommand(sql, conn);
+        command.Parameters.AddWithValue("cardDbId", (int)cardDbId);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if (await reader.ReadAsync())
+        {
+            return new HealingCard
+            {
+                CardDbId = (uint)reader.GetInt32(0),
+                CardSubType = reader.GetInt32(1),
+                WeightRare = reader.GetInt32(2),
+                Amount = reader.GetInt32(3)
+            };
+        }
+
+        throw new Exception();
+    }
 
     public static async Task<List<HutKitCard>> GetKitCards(bool? isAway, bool? isRare)
     {

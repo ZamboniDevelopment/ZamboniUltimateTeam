@@ -31,6 +31,14 @@ public static class HutCardFactory
         var trainingCard = await UltimateDatabase.GetTrainingCardByDbIdAsync((uint)cardDbId);
         return await CreateNonPlayerCard(owner, (uint)cardDbId, (CardSubType)trainingCard.CardSubtype);
     }
+    
+    public static async Task<CardData> CreateRandomHealingCard(long owner)
+    {
+        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_healingcards");
+        var cardDbId = list[Random.Next(list.Count)];
+        var healingCard = await UltimateDatabase.GetHealingCardByDbIdAsync((uint)cardDbId);
+        return await CreateNonPlayerCard(owner, (uint)cardDbId, (CardSubType)healingCard.CardSubType);
+    }
 
     public static async Task<CardData> CreateRandomLogoCard(long owner)
     {

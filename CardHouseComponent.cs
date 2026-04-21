@@ -1,5 +1,4 @@
 using Blaze3SDK;
-using Blaze3SDK.Blaze.Example;
 using BlazeCommon;
 using ZamboniUltimateTeam.Requests;
 using ZamboniUltimateTeam.Responses;
@@ -466,9 +465,26 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_CHECKING,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_DEFENSE,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ALL,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_RW_C,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_C_RW,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_LW_C,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_C_LW,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_RW_LW,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_LW_RW,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_RD_LD,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_LD_RD,
+    };
+    
+    public static readonly CardSubType[] HealingTypes =
+    {
+        CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_TORSO,
+        CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_ARMS,
+        CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_LEGS,
+        CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_ALL,
     };
 
     public static readonly CardSubType[] ConsumablesTypes = TrainingTypes
+        .Concat(HealingTypes)
         .Append(CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER)
         .ToArray();
 
