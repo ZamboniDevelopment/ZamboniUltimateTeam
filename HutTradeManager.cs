@@ -9,7 +9,7 @@ using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam;
 
-public class HutTradeManager
+public static class HutTradeManager
 {
     private static readonly ConcurrentDictionary<long, SemaphoreSlim> _tradeLocks = new();
 

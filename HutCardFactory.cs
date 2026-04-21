@@ -4,7 +4,7 @@ using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam;
 
-public class HutCardFactory
+public static class HutCardFactory
 {
     private static readonly Random Random = new();
 

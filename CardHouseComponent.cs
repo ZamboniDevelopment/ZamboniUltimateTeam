@@ -106,6 +106,15 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         // throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NAME_EXISTS);
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+        var gamerInfo = await HutManager.GetGamerInfo(userId);
+        if (gamerInfo == null)
+        {
+            if (!await HutManager.IsTeamNameAvailable(request.mGamerInfo.mTeamName.Trim()))
+            {
+                throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NAME_EXISTS);
+            }
+            await HutManager.InsertNameReservation(userId, UltimateTeam.Server.GetUserNameByUserId(userId), request.mGamerInfo.mTeamName, request.mGamerInfo.mTeamAbbreviation);
+        }
         await HutManager.SetGamerInfo(request.mGamerInfo, userId);
         return new NumericResponse();
     }
@@ -370,7 +379,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
 
-        await HutManager.HardDelete(userId);
+        if (!await HutManager.HardDelete(userId)) throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_DELETE_LAST_SQUAD);
         return new NumericResponse
         {
             mNumber = 0,

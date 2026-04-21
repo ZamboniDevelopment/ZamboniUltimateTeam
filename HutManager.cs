@@ -6,7 +6,7 @@ using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam;
 
-public class HutManager()
+public static class HutManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -587,7 +587,60 @@ public class HutManager()
         return cardDataList;
     }
 
-    public static async Task HardDelete(long userId, long? cardId = null)
+    public static async Task<bool> IsTeamNameAvailable(string teamName)
+    {
+        const string query = @"
+            SELECT COUNT(*) 
+            FROM hut_name_reservations
+            WHERE LOWER(team_name) = LOWER(@teamName)
+              AND set_free = false";
+
+        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+        await conn.OpenAsync();
+    
+        await using var cmd = new NpgsqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("teamName", teamName);
+    
+        var count = (long)(await cmd.ExecuteScalarAsync())!;
+        return count == 0;
+    }
+    
+    public static async Task InsertNameReservation(long userId, string userName, string teamName, string teamAbbreviation)
+    {
+        const string query = @"
+            INSERT INTO hut_name_reservations (user_id, user_name, team_name, team_abbreviation)
+            VALUES (@userId, @userName, @teamName, @teamAbbreviation)";
+
+        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("userId", userId);
+        cmd.Parameters.AddWithValue("userName", userName);
+        cmd.Parameters.AddWithValue("teamName", teamName);
+        cmd.Parameters.AddWithValue("teamAbbreviation", teamAbbreviation);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+    
+    public static async Task MarkTeamNameAsDeleted(string teamName)
+    {
+        const string query = @"
+        UPDATE hut_name_reservations
+        SET deleted_at = CURRENT_TIMESTAMP
+        WHERE LOWER(team_name) = LOWER(@teamName)
+          AND deleted_at IS NULL";
+
+        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("teamName", teamName);
+
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public static async Task<bool> HardDelete(long userId, long? cardId = null)
     {
         await using var connection = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await connection.OpenAsync();
@@ -595,51 +648,99 @@ public class HutManager()
 
         try
         {
-            string[] tables = cardId.HasValue
-                ? new[] { "hut_offer_info", "hut_trade_info", "hut_cards" }
-                : new[] { "hut_cards", "hut_gamer_info", "hut_general_info", "hut_squad_info", "hut_version_info", "hut_offer_info", "hut_trade_info" };
-
-            foreach (var table in tables)
+            if (cardId.HasValue)
             {
-                if (cardId.HasValue)
-                {
-                    if (table == "hut_offer_info")
-                    {
-                        var query = $"UPDATE {table} SET card_ids = array_remove(card_ids, @cardId) WHERE user_id = @userId"; //Todo where trade is not expired
-                        await using var cmd = new NpgsqlCommand(query, connection, transaction);
-                        cmd.Parameters.AddWithValue("userId", userId);
-                        cmd.Parameters.AddWithValue("cardId", cardId.Value);
-                        await cmd.ExecuteNonQueryAsync();
-                        continue;
-                    }
-                    else if (table == "hut_cards")
-                    {
-                        var query = $"DELETE FROM {table} WHERE card_id = @cardId AND user_id = @userId";
-                        await using var cmd = new NpgsqlCommand(query, connection, transaction);
-                        cmd.Parameters.AddWithValue("userId", userId);
-                        cmd.Parameters.AddWithValue("cardId", cardId.Value);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-                }
-                else
-                {
-                    bool useCardFilter = cardId.HasValue && (table == "hut_cards" || table == "hut_trade_info");
-                    string columnName = useCardFilter ? "card_id" : "user_id";
-                    long idValue = useCardFilter ? cardId.Value : userId;
+                await DeleteCard(userId, cardId.Value, connection, transaction);
+            }
+            else
+            {
+                bool canDelete = await CanDeleteUser(userId, connection, transaction);
+                if (!canDelete) return false;
 
-                    var query = $"DELETE FROM {table} WHERE {columnName} = @id";
-                    await using var cmd = new NpgsqlCommand(query, connection, transaction);
-                    cmd.Parameters.AddWithValue("id", idValue);
-                    await cmd.ExecuteNonQueryAsync();
-                }
+                await DeleteUser(userId, connection, transaction);
             }
 
             await transaction.CommitAsync();
+            return true;
         }
         catch (Exception)
         {
             await transaction.RollbackAsync();
             throw;
         }
+    }
+    
+    private static async Task DeleteCard(long userId, long cardId, NpgsqlConnection conn, NpgsqlTransaction tx)
+    {
+        const string deleteCard = "DELETE FROM hut_cards WHERE card_id = @cardId AND user_id = @userId";
+
+        await using var cmd = new NpgsqlCommand(deleteCard, conn, tx);
+        cmd.Parameters.AddWithValue("cardId", cardId);
+        cmd.Parameters.AddWithValue("userId", userId);
+        await cmd.ExecuteNonQueryAsync();
+    }
+    
+    private static async Task<bool> CanDeleteUser(long userId, NpgsqlConnection conn, NpgsqlTransaction tx)
+    {
+        const string activeTradeQuery = @"
+        SELECT COUNT(*) FROM hut_trade_info
+        WHERE user_id = @userId
+          AND trade_state = 1";
+
+        await using (var cmd = new NpgsqlCommand(activeTradeQuery, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("userId", userId);
+            var count = (long)(await cmd.ExecuteScalarAsync())!;
+            if (count > 0) return false;
+        }
+
+        const string activeOfferQuery = @"
+        SELECT COUNT(*) FROM hut_offer_info
+        WHERE user_id = @userId
+          AND (offer_state = 1 OR offer_state = 7)";
+
+        await using (var cmd = new NpgsqlCommand(activeOfferQuery, conn, tx))
+        {
+            cmd.Parameters.AddWithValue("userId", userId);
+            var count = (long)(await cmd.ExecuteScalarAsync())!;
+            if (count > 0) return false;
+        }
+        return true;
+    }
+    
+    private static async Task DeleteUser(long userId, NpgsqlConnection conn, NpgsqlTransaction tx)
+    {
+        string? teamName = await GetTeamName(userId, conn, tx);
+
+        string[] tables =
+        [
+            "hut_watching",
+            "hut_offer_info",
+            "hut_trade_info",
+            "hut_cards",
+            "hut_squad_info",
+            "hut_gamer_info",
+            "hut_version_info",
+            "hut_general_info",
+            "hut_tournaments"
+        ];
+
+        foreach (var table in tables)
+        {
+            var query = $"DELETE FROM {table} WHERE user_id = @userId";
+            await using var cmd = new NpgsqlCommand(query, conn, tx);
+            cmd.Parameters.AddWithValue("userId", userId);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        if (teamName != null) await MarkTeamNameAsDeleted(teamName);
+    }
+
+    private static async Task<string?> GetTeamName(long userId, NpgsqlConnection conn, NpgsqlTransaction tx)
+    {
+        const string query = "SELECT team_name FROM hut_gamer_info WHERE user_id = @userId";
+        await using var cmd = new NpgsqlCommand(query, conn, tx);
+        cmd.Parameters.AddWithValue("userId", userId);
+        return (string?)await cmd.ExecuteScalarAsync();
     }
 }
