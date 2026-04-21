@@ -547,21 +547,24 @@ public static class HutManager
             //but seems it's not needed because client has up-to-date info on his Squad all the time,
             //and client doesn't mind sending him again his whole sticker book
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_ALL: break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_HEADCOACH: sql.Append(" AND sub_type = 6"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_BADGE: sql.Append(" AND sub_type = 12"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_STADIUM: sql.Append(" AND sub_type = 11"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_C: sql.Append(" AND sub_type = 0"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_LW: sql.Append(" AND sub_type = 1"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_RW: sql.Append(" AND sub_type = 2"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_DEFENDER: sql.Append(" AND sub_type = 3"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_GK: sql.Append(" AND sub_type = 4"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL: sql.Append(" AND sub_type BETWEEN 0 AND 4"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER: sql.Append(" AND sub_type BETWEEN 0 AND 4"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT: sql.Append(" AND (sub_type BETWEEN 51 AND 62 OR sub_type = 201)"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_OFFLINE_TROPHY: sql.Append(" AND sub_type = 145"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_ONLINE_TROPHY: sql.Append(" AND sub_type = 146"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_LIVE_TROPHY: sql.Append(" AND sub_type = 147"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYOFF_TROPHY: sql.Append(" AND sub_type = 148"); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_HEADCOACH: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_BADGE: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_STADIUM: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_C: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_LW: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LW); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_RW: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RW); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_LD: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LD); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_RD: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RD); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_GK: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_GK); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL: sql.Append(" AND sub_type = ANY(@playerTypes)"); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER: sql.Append(" AND sub_type = ANY(@playerTypes)"); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT: sql.Append(" AND sub_type = ANY(@consumableTypes)"); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_OFFLINE_TROPHY: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_OFFLINE); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_ONLINE_TROPHY: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_ONLINE); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_LIVE_TROPHY: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_LIVE); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYOFF_TROPHY: sql.Append(" AND sub_type = "+(int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_PLAYOFF); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_STAR_OF_THE_WEEK:  throw new NotImplementedException();
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_LEGEND: throw new NotImplementedException();
             default: throw new NotImplementedException();
         }
 
@@ -574,6 +577,12 @@ public static class HutManager
 
         if (request.mLeagueId >= 0) cmd.Parameters.AddWithValue("league_id", request.mLeagueId);
         if (request.mTeamId >= 0) cmd.Parameters.AddWithValue("team_id", request.mTeamId);
+        if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT) cmd.Parameters.AddWithValue("consumableTypes", CardHouseComponent.ConsumablesTypes.Select(x => (int)x).ToArray());
+        if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL
+            || request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER)
+        {
+            cmd.Parameters.AddWithValue("playerTypes", CardHouseComponent.PlayerTypes.Select(x => (int)x).ToArray());
+        }
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
