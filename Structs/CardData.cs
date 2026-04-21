@@ -42,7 +42,7 @@ public struct CardData
     public byte mPreferredPositionId;
     
     [TdfMember("PRIC")] 
-    public byte mDiscardPrice;
+    public short mDiscardPrice;
     
     [TdfMember("RARE")] 
     public byte mRareFlag;

@@ -6,6 +6,9 @@ namespace ZamboniUltimateTeam.Requests;
 [TdfStruct]
 public struct StickerBookStats2Request
 {
+    [TdfMember("BASE")] 
+    public byte mBASE;
+    
     [TdfMember("CONT")] 
     public RequestContext mContextId;
 

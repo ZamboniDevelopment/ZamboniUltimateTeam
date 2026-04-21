@@ -6,6 +6,9 @@ namespace ZamboniUltimateTeam.Requests;
 [TdfStruct]
 public struct CreatePackRequest
 {
+    [TdfMember("CLNT")] 
+    public UltimateTeamClientType mClientType;
+    
     [TdfMember("DCID")] 
     public uint mCardDbId;
 

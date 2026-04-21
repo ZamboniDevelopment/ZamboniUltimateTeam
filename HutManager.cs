@@ -161,7 +161,11 @@ public class HutManager()
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
-        const string sql = "SELECT * FROM hut_squad_info WHERE user_id = @user_id;";
+        const string sql = @"
+            SELECT s.*, g.team_abbreviation 
+            FROM hut_squad_info AS s 
+            INNER JOIN hut_gamer_info AS g ON s.user_id = g.user_id 
+            WHERE s.user_id = @user_id;";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("user_id", userId);
@@ -181,12 +185,17 @@ public class HutManager()
                 mChemistry = (uint)reader.GetInt32(reader.GetOrdinal("chemistry")),
                 mCHNG = (uint)chngDebugCounter++,
                 mFormationId = (uint)reader.GetInt32(reader.GetOrdinal("formation_id")),
+                // mJERA = 0,
+                // mJERH = 0,
                 mLines = reader.GetFieldValue<int[]>(reader.GetOrdinal("lines")).ToList(),
+                // mLOGO = 0,
                 mManager = (await GetCard(reader.GetInt64(reader.GetOrdinal("manager")))).Card,
                 mSquadName = reader.GetString(reader.GetOrdinal("squad_name")),
                 mPlayers = playersOrdered,
                 mStarRating = (uint)reader.GetInt32(reader.GetOrdinal("star_rating")),
-                mSquadId = (uint)reader.GetInt32(reader.GetOrdinal("squad_id"))
+                mSquadId = (uint)reader.GetInt32(reader.GetOrdinal("squad_id")),
+                // mSTAD = 0,
+                mTeamAbbreviation = reader.GetString(reader.GetOrdinal("team_abbreviation")),
             };
         }
 
@@ -373,11 +382,11 @@ public class HutManager()
         const string sql = @"
         INSERT INTO hut_squad_info (
             user_id, chemistry, formation_id, lines, 
-            manager, squad_name, players, star_rating, squad_id
+            manager, squad_name, players, rating_def, rating_gk, rating_off, star_rating, squad_id
         ) 
         VALUES (
             @user_id, @chemistry, @formation_id, @lines, 
-            @manager, @squad_name, @players, @star_rating, @squad_id
+            @manager, @squad_name, @players, @rating_def, @rating_gk, @rating_off, @star_rating, @squad_id
         )
         ON CONFLICT (user_id) DO UPDATE SET
             user_id = EXCLUDED.user_id,
@@ -387,6 +396,9 @@ public class HutManager()
             manager = EXCLUDED.manager,
             squad_name = EXCLUDED.squad_name,
             players = EXCLUDED.players,
+            rating_def = EXCLUDED.rating_def,
+            rating_gk = EXCLUDED.rating_gk,
+            rating_off = EXCLUDED.rating_off,
             star_rating = EXCLUDED.star_rating,
             squad_id = EXCLUDED.squad_id;";
 
@@ -399,6 +411,9 @@ public class HutManager()
         cmd.Parameters.AddWithValue("manager", request.mManager);
         cmd.Parameters.AddWithValue("squad_name", request.mSquadName);
         cmd.Parameters.AddWithValue("players", request.mPlayers);
+        cmd.Parameters.AddWithValue("rating_def", (int)request.mRatingDefensive);
+        cmd.Parameters.AddWithValue("rating_gk", (int)request.mRatingGoalies);
+        cmd.Parameters.AddWithValue("rating_off", (int)request.mRatingOffensive);
         cmd.Parameters.AddWithValue("star_rating", (int)request.mStarRating);
         cmd.Parameters.AddWithValue("squad_id", (int)request.mSquadId);
 

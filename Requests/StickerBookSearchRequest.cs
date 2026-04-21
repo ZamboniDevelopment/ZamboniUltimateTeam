@@ -6,6 +6,9 @@ namespace ZamboniUltimateTeam.Requests;
 [TdfStruct]
 public struct StickerBookSearchRequest
 {
+    [TdfMember("BASE")] 
+    public byte mBASE;
+    
     [TdfMember("COLL")] 
     public byte mCollectionYearId;
 

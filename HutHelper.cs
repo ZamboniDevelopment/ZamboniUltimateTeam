@@ -24,7 +24,7 @@ public class HutHelper
             mMaxTrainingCardsCanApply = (byte)reader.GetInt16(reader.GetOrdinal("morale")),
             mNumberOfOwners = 1, //(byte)reader.GetInt16(reader.GetOrdinal("free")), ///TODO
             mPreferredPositionId = (byte)reader.GetInt16(reader.GetOrdinal("preferred_position_id")),
-            mDiscardPrice = (byte)reader.GetInt16(reader.GetOrdinal("discard_price")),
+            mDiscardPrice = (short)reader.GetInt16(reader.GetOrdinal("discard_price")),
             mRareFlag = (byte)reader.GetInt16(reader.GetOrdinal("rare_flag")),
             mRating = (byte)reader.GetInt16(reader.GetOrdinal("rating")),
             mSalaryCap = reader.GetInt16(reader.GetOrdinal("salary_cap")),

@@ -100,6 +100,9 @@ public class UltimateDatabase
                     manager BIGINT,
                     squad_name VARCHAR,
                     players BIGINT[] DEFAULT '{}',
+                    rating_def INTEGER,
+                    rating_gk INTEGER,
+                    rating_off INTEGER,
                     star_rating INTEGER,
                     squad_id INTEGER
                 );";
