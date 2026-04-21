@@ -1,10 +1,14 @@
 using Tdf;
+using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam.Requests;
 
 [TdfStruct]
 public struct LoginRequest
 {
+    [TdfMember("CLNT")] 
+    public UltimateTeamClientType mClientType;
+    
     [TdfMember("CP")] 
     public uint mCreatePlayer;
 

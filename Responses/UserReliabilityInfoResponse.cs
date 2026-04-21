@@ -14,6 +14,9 @@ public struct UserReliabilityInfoResponse
     [TdfMember("MST")] 
     public int mMatchesStarted;
     
+    [TdfMember("OID")] 
+    public long mOID;
+    
     [TdfMember("REL")] 
     public int mReliability;
     

@@ -14,8 +14,17 @@ public struct SquadInfo
     [TdfMember("FORM")] 
     public uint mFormationId;
     
+    [TdfMember("JERA")] 
+    public int mJERA;
+    
+    [TdfMember("JERH")] 
+    public int mJERH;
+    
     [TdfMember("LINE")] 
     public List<int> mLines;
+    
+    [TdfMember("LOGO")] 
+    public int mLOGO;
     
     [TdfMember("MNGR")] 
     public CardData mManager;
@@ -31,4 +40,11 @@ public struct SquadInfo
     
     [TdfMember("SQID")] 
     public uint mSquadId;
+    
+    [TdfMember("STAD")] 
+    public int mSTAD;
+    
+    [TdfMember("TMAB")] 
+    public string mTeamAbbreviation;
+    
 }

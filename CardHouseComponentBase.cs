@@ -68,7 +68,7 @@ public static class CardHouseComponentBase
             CardHouseComponentCommand.logout => typeof(LogoutRequest),
             CardHouseComponentCommand.gamerSetInfo => typeof(GamerSetInfoRequest),
             CardHouseComponentCommand.gamerGetInfo => typeof(GamerGetInfoRequest),
-            CardHouseComponentCommand.getConfig => typeof(NumericRequest),
+            CardHouseComponentCommand.getConfig => typeof(GetConfigRequest),
             CardHouseComponentCommand.resetUser => typeof(NumericRequest),
             CardHouseComponentCommand.getDeckInfo => typeof(DeckInfoRequest),
             CardHouseComponentCommand.moveCard => typeof(MoveCardRequest),
@@ -211,7 +211,7 @@ public static class CardHouseComponentBase
         }
 
         [BlazeCommand((ushort)CardHouseComponentCommand.getConfig)]
-        public virtual Task<GetConfigResponse> GetConfigRequestAsync(NumericRequest request, BlazeRpcContext context)
+        public virtual Task<GetConfigResponse> GetConfigRequestAsync(GetConfigRequest request, BlazeRpcContext context)
         {
             throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
         }
@@ -582,14 +582,14 @@ public static class CardHouseComponentBase
             return Connection.SendRequestAsync<ChangePlayersRequest, ChangePlayersResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.changePlayers, request);
         }
         
-        public GetConfigResponse GetConfigRequest(NumericRequest request)
+        public GetConfigResponse GetConfigRequest(GetConfigRequest request)
         {
-            return Connection.SendRequest<NumericRequest, GetConfigResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getConfig, request);
+            return Connection.SendRequest<GetConfigRequest, GetConfigResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getConfig, request);
         }
 
-        public Task<GetConfigResponse> GetConfigRequestAsync(NumericRequest request)
+        public Task<GetConfigResponse> GetConfigRequestAsync(GetConfigRequest request)
         {
-            return Connection.SendRequestAsync<NumericRequest, GetConfigResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getConfig, request);
+            return Connection.SendRequestAsync<GetConfigRequest, GetConfigResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getConfig, request);
         }
         
         public AssignCardsResponse AssignCardsRequest(AssignCardsRequest request)

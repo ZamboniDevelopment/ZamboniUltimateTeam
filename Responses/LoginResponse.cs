@@ -1,3 +1,4 @@
+using Blaze3SDK.Blaze.Example;
 using Tdf;
 
 namespace ZamboniUltimateTeam.Responses;
@@ -10,15 +11,33 @@ public struct LoginResponse
 
     [TdfMember("BNUS")] 
     public byte mBonusAwarded;
+    
+    [TdfMember("CVER")]
+    public List<int> mCVER;
 
+    [TdfMember("DRRC")] 
+    public short mDRRC;
+    
+    [TdfMember("DRRL")] 
+    public short mDRRL;
+    
+    [TdfMember("DRRO")] 
+    public short mDRRO;
+    
+    [TdfMember("DRRW")] 
+    public short mDRRW;
+    
     [TdfMember("NAME")] 
     public string mTeamName;
 
     [TdfMember("RWRD")] 
-    public byte mRewardType;
+    public short mRewardType;
     
     [TdfMember("TNOW")] 
-    public uint mRewardValue;
+    public int mRewardValue;
+    
+    [TdfMember("TRBS")] 
+    public int mTRBS;
     
     [TdfMember("UID")] 
     public ulong mUserId;

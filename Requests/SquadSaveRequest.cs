@@ -9,6 +9,9 @@ public struct SquadSaveRequest
     [TdfMember("CHEM")] 
     public uint mChemistry;
     
+    [TdfMember("COPY")] 
+    public byte mCOPY;
+    
     [TdfMember("FORM")] 
     public uint mFormation;
     
@@ -23,6 +26,15 @@ public struct SquadSaveRequest
     
     [TdfMember("PLRS")] 
     public List<long> mPlayers;
+    
+    [TdfMember("RDEF")] 
+    public byte mRatingDefensive;
+    
+    [TdfMember("RGK")] 
+    public byte mRatingGoalies;
+    
+    [TdfMember("ROFF")] 
+    public byte mRatingOffensive;
     
     [TdfMember("RTNG")] 
     public uint mStarRating;

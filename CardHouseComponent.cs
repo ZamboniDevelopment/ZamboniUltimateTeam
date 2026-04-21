@@ -1,4 +1,5 @@
 using Blaze3SDK;
+using Blaze3SDK.Blaze.Example;
 using BlazeCommon;
 using ZamboniUltimateTeam.Requests;
 using ZamboniUltimateTeam.Responses;
@@ -19,10 +20,20 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         {
             mTeamAbbreviation = gamerInfo.Value.mTeamAbbreviation,
             mBonusAwarded = 0,
+            mCVER = new List<int>
+            {
+                1,2,3
+            },
+            mDRRC = 1,
+            mDRRL = 1,
+            mDRRO = 1,
+            mDRRW = 1,
             mTeamName = gamerInfo.Value.mTeamName,
             mRewardType = 0,
             mRewardValue = 0,
-            mUserId = 0
+            mTRBS = 0,
+            mUserId = 0,
+
         };
     }
 
@@ -153,7 +164,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         };
     }
 
-    public override async Task<GetConfigResponse> GetConfigRequestAsync(NumericRequest request, BlazeRpcContext context)
+    public override async Task<GetConfigResponse> GetConfigRequestAsync(GetConfigRequest request, BlazeRpcContext context)
     {
         return new GetConfigResponse
         {

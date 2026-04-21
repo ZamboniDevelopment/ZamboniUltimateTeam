@@ -4,15 +4,12 @@ using ZamboniUltimateTeam.Structs;
 namespace ZamboniUltimateTeam.Requests;
 
 [TdfStruct]
-public struct GamerGetInfoRequest
+public struct GetConfigRequest
 {
     [TdfMember("CLNT")] 
     public UltimateTeamClientType mClientType;
-    
-    [TdfMember("TUID")] 
-    public ulong mTargetUserId;
 
     [TdfMember("UID")] 
-    public ulong mUserId;
+    public long mUserId;
     
 }
