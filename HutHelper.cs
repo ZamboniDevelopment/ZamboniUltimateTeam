@@ -195,7 +195,7 @@ public class HutHelper
 
         const int baseSalary = 400;
         const int pricePerPoint = 25;
-        const double highBias = 1.9;
+        const double highBias = 1.6;
 
         int ovr = Math.Clamp(overall, minOverAll, maxOverAll);
         int pointsAboveMin = ovr - minOverAll;
