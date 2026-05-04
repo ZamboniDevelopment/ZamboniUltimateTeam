@@ -113,8 +113,10 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             {
                 throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NAME_EXISTS);
             }
+
             await HutManager.InsertNameReservation(userId, UltimateTeam.Server.GetUserNameByUserId(userId), request.mGamerInfo.mTeamName, request.mGamerInfo.mTeamAbbreviation);
         }
+
         await HutManager.SetGamerInfo(request.mGamerInfo, userId);
         return new NumericResponse();
     }
@@ -475,7 +477,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_RD_LD,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_LD_RD,
     };
-    
+
     public static readonly CardSubType[] HealingTypes =
     {
         CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_TORSO,
@@ -1156,7 +1158,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mTargetUserId = request.mTargetUserId,
         };
     }
-    
+
     public override async Task<SquadSearchResponse> SquadSearchAsync(SquadSearchRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
@@ -1165,7 +1167,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mResultList = await HutManager.GetAllSquadsAsOfflineOpponents(userId)
         };
     }
-    
+
     public override async Task<SquadLoadResponse> SquadLoadAsync(SquadLoadRequest request, BlazeRpcContext context)
     {
         var squadInfoPromise = await HutManager.GetSquadInfo(request.mUserId);
@@ -1209,4 +1211,42 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mVersionInfo = versionInfo.Value
         };
     }
+
+    public override async Task<GetFriendHistoryResponse> GetFriendHistoryAsync(NumericRequest request, BlazeRpcContext context)
+    {
+        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+
+        return new GetFriendHistoryResponse
+        {
+            mHistoryList = new List<FriendHistoryEntry>()
+            {
+                //TODO Query hut_reports_l
+            }
+        };
+    }
+
+    public override async Task<GetFriendGameListResponse> GetFriendGameListAsync(GetFriendGameListRequest request, BlazeRpcContext context)
+    {
+        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+
+        return new GetFriendGameListResponse
+        {
+            mGameList = new List<FriendGameEntry>
+            {
+                //TODO Query hut_reports_l
+            }
+        };
+    }
+    
+    public override async Task<GetPersistenceInfoResponse> GetPersistenceInfoAsync(NumericRequest request, BlazeRpcContext context)
+    {
+        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+
+        return new GetPersistenceInfoResponse
+        {
+            mEST = 0,
+            mVLUE = 10,
+        };
+    }
+    
 }

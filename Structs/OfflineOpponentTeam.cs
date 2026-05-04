@@ -3,7 +3,7 @@ using Tdf;
 namespace ZamboniUltimateTeam.Structs;
 
 [TdfStruct]
-public struct OfflineOpponentTeam //Is this FriendGameEntry?
+public struct OfflineOpponentTeam
 {
     [TdfMember("LOGO")] 
     public uint mLogoDbId;

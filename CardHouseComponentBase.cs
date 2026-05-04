@@ -21,6 +21,9 @@ public static class CardHouseComponentBase
         moveCard = 304,
         playGame = 305,
         assignCards = 307,
+        getFriendHistory = 309,
+        getFriendGameList = 310,
+        getPersistenceInfo = 312,
         createPack = 401,
         viewCards = 402,
         discardCard = 403,
@@ -29,6 +32,7 @@ public static class CardHouseComponentBase
         stickerBookCard = 407,
         getStaffBonus = 408,
         applySalaryCap = 409,
+        setSpecialReward = 410,
         ISStart = 701,
         ISSearch = 702,
         ISViewTrade = 703,
@@ -77,6 +81,10 @@ public static class CardHouseComponentBase
             CardHouseComponentCommand.moveCard => typeof(MoveCardRequest),
             CardHouseComponentCommand.playGame => typeof(PlayGameRequest),
             CardHouseComponentCommand.assignCards => typeof(AssignCardsRequest),
+            CardHouseComponentCommand.getFriendHistory => typeof(NumericRequest),
+            CardHouseComponentCommand.getFriendGameList => typeof(GetFriendGameListRequest),
+            CardHouseComponentCommand.getPersistenceInfo => typeof(NumericRequest),
+            CardHouseComponentCommand.setSpecialReward => typeof(SetSpecialRewardRequest),
             CardHouseComponentCommand.createPack => typeof(CreatePackRequest),
             CardHouseComponentCommand.viewCards => typeof(ViewCardsRequest),
             CardHouseComponentCommand.discardCard => typeof(DiscardCardRequest),
@@ -127,6 +135,10 @@ public static class CardHouseComponentBase
             CardHouseComponentCommand.moveCard => typeof(MoveCardResponse),
             CardHouseComponentCommand.playGame => typeof(PlayGameResponse),
             CardHouseComponentCommand.assignCards => typeof(AssignCardsResponse),
+            CardHouseComponentCommand.getFriendHistory => typeof(GetFriendHistoryResponse),
+            CardHouseComponentCommand.getFriendGameList => typeof(GetFriendGameListResponse),
+            CardHouseComponentCommand.getPersistenceInfo => typeof(GetPersistenceInfoResponse),
+            CardHouseComponentCommand.setSpecialReward => typeof(SetSpecialRewardResponse),
             CardHouseComponentCommand.createPack => typeof(CreatePackResponse),
             CardHouseComponentCommand.viewCards => typeof(ViewCardsResponse),
             CardHouseComponentCommand.discardCard => typeof(DiscardCardResponse),
@@ -265,14 +277,36 @@ public static class CardHouseComponentBase
             throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
         }
         
+        [BlazeCommand((ushort)CardHouseComponentCommand.getFriendHistory)]
+        public virtual Task<GetFriendHistoryResponse> GetFriendHistoryAsync(NumericRequest request, BlazeRpcContext context)
+        {
+            throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
+        }
+        
+        [BlazeCommand((ushort)CardHouseComponentCommand.getFriendGameList)]
+        public virtual Task<GetFriendGameListResponse> GetFriendGameListAsync(GetFriendGameListRequest request, BlazeRpcContext context)
+        {
+            throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
+        }
+        
+        [BlazeCommand((ushort)CardHouseComponentCommand.getPersistenceInfo)]
+        public virtual Task<GetPersistenceInfoResponse> GetPersistenceInfoAsync(NumericRequest request, BlazeRpcContext context)
+        {
+            throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
+        }
+            
+        [BlazeCommand((ushort)CardHouseComponentCommand.setSpecialReward)]
+        public virtual Task<SetSpecialRewardResponse> SetSpecialRewardAsync(SetSpecialRewardRequest request, BlazeRpcContext context)
+        {
+            throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
+        }
                 
         [BlazeCommand((ushort)CardHouseComponentCommand.moveCard)]
         public virtual Task<MoveCardResponse> MoveCardAsync(MoveCardRequest request, BlazeRpcContext context)
         {
             throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
         }
-
-
+        
         [BlazeCommand((ushort)CardHouseComponentCommand.discardCard)]
         public virtual Task<DiscardCardResponse> DiscardCardAsync(DiscardCardRequest request, BlazeRpcContext context)
         {
@@ -549,6 +583,46 @@ public static class CardHouseComponentBase
         public Task<MoveCardResponse> MoveCardRequestAsync(MoveCardRequest request)
         {
             return Connection.SendRequestAsync<MoveCardRequest, MoveCardResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.moveCard, request);
+        }
+        
+        public GetFriendHistoryResponse GetFriendHistoryRequest(NumericRequest request)
+        {
+            return Connection.SendRequest<NumericRequest, GetFriendHistoryResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getFriendHistory, request);
+        }
+
+        public Task<GetFriendHistoryResponse> GetFriendHistoryRequestAsync(NumericRequest request)
+        {
+            return Connection.SendRequestAsync<NumericRequest, GetFriendHistoryResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getFriendHistory, request);
+        }
+        
+        public GetFriendGameListResponse GetFriendGameListRequest(GetFriendGameListRequest request)
+        {
+            return Connection.SendRequest<GetFriendGameListRequest, GetFriendGameListResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getFriendGameList, request);
+        }
+
+        public Task<GetFriendGameListResponse> GetFriendGameListRequestAsync(GetFriendGameListRequest request)
+        {
+            return Connection.SendRequestAsync<GetFriendGameListRequest, GetFriendGameListResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getFriendGameList, request);
+        }
+        
+        public GetPersistenceInfoResponse GetPersistenceInfoRequest(NumericRequest request)
+        {
+            return Connection.SendRequest<NumericRequest, GetPersistenceInfoResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getPersistenceInfo, request);
+        }
+
+        public Task<GetPersistenceInfoResponse> GetPersistenceInfoRequestAsync(NumericRequest request)
+        {
+            return Connection.SendRequestAsync<NumericRequest, GetPersistenceInfoResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.getPersistenceInfo, request);
+        }
+            
+        public SetSpecialRewardResponse SetSpecialRewardRequest(SetSpecialRewardRequest request)
+        {
+            return Connection.SendRequest<SetSpecialRewardRequest, SetSpecialRewardResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.setSpecialReward, request);
+        }
+
+        public Task<SetSpecialRewardResponse> SetSpecialRewardRequestAsync(SetSpecialRewardRequest request)
+        {
+            return Connection.SendRequestAsync<SetSpecialRewardRequest, SetSpecialRewardResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.setSpecialReward, request);
         }
         
         public ApplyCardResponse ApplyCardRequest(ApplyCardRequest request)
