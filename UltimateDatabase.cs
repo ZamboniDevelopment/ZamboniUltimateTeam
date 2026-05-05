@@ -286,7 +286,7 @@ public static class UltimateDatabase
                 mInjuryType = reader.GetByte(reader.GetOrdinal("injury")),
                 mMaxTrainingCardsCanApply = HutHelper.DetermineTrainingCardsCanApply(rating),
                 mPreferredPositionId = reader.GetByte(reader.GetOrdinal("preferredposition")),
-                mDiscardPrice = 100,
+                mDiscardPrice = 0,
                 mRareFlag = reader.GetByte(reader.GetOrdinal("rare")),
                 mRating = (byte)rating,
                 mSalaryCap = HutHelper.DetermineSalary(rating),

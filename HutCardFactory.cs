@@ -152,7 +152,7 @@ public static class HutCardFactory
             mMaxTrainingCardsCanApply = 0,
             mNumberOfOwners = 0,
             mPreferredPositionId = (byte)cardSubType,
-            mDiscardPrice = 100,
+            mDiscardPrice = 0,
             mRareFlag = 0,
             mRating = 0,
             mSalaryCap = 0,
