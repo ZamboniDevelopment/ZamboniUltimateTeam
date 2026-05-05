@@ -185,44 +185,69 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 11, 21, 22, 33, 44, 55, 66, 77, 88, 99, 10,
                 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
                 21, 22, 23, 24, 25, 26, 27,
-                100, //Game End: Completion award
+                500, //Game End: Completion award
                 29,
                 50, //Game End Positive: Pucks per Goal
                 31,
-                5, //Game End Positive: Pucks per Shots on goal
+                2, //Game End Positive: Pucks per Shots on goal
                 33,
-                5, //Game End Positive: Pucks per Hits
+                2, //Game End Positive: Pucks per Hits
                 35,
-                5, //Game End Positive: Pucks per Faceoffs Won
+                2, //Game End Positive: Pucks per Faceoffs Won
                 37,
-                20, //Game End Positive: Pucks per Time on attack MINUTES
+                5, //Game End Positive: Pucks per Time on attack MINUTES
                 39,
                 1, //Game End Positive: Pucks per Powerplay % something?
                 41,
-                5, //Game End Positive: Pucks per successful pass
+                1, //Game End Positive: Pucks per successful pass
                 43,
                 -50, //Game End Negative: Puck deduction per opponent goals
                 45,
-                -25, //Game End Negative: Puck deduction per penalty minute
+                -2, //Game End Negative: Puck deduction per penalty minute
                 47,
-                -25, //Game End Negative: Puck deduction per icing
+                -2, //Game End Negative: Puck deduction per icing
                 49,
-                -10, //Game End Negative: Puck deduction per offside
+                -2, //Game End Negative: Puck deduction per offside
                 51,
                 50, //Bid increment
-                53,
-                54,
-                55,
-                56,
+                13,
+                200, //Default starting price for auction
+                200, //Min starting price for auction
+                100000, //Max starting price for auction
+                250, //Min buyout price for auction
+                100000, //Max buyout price for auction
+                250, //Starting bid vs buyout differential first jump something idk
+                0, //Default buyout price for auction
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                100000, //Search min bet starting
+                40,
+                100000, //Search max bet starting
+                31,
+                100000, //Search min buyout starting
+                32,
+                100000, //Search max buyout starting
+                33,
+                34,
+                35,
+                36,
+                37,
+                81, 82, 83, 
                 10, //Difficulty Rookie Multiplier
-                10, //Difficulty Pro Multiplier
-                10, //Difficulty All-Star Multiplier
-                11, //Difficulty Super-Star Multiplier
-                61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
-                71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
-                81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+                11, //Difficulty Pro Multiplier
+                12, //Difficulty All-Star Multiplier
+                13, //Difficulty Super-Star Multiplier
+                88, 89, 90,
                 91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
-                101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
+                101, 102, 103,
+                100, //Max consumables in inventory
+                105, 106, 107, 108, 109, 110,
                 111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
                 121, 122, 123, 124, 125, 126, 127, 128, 129, 130,
                 131, 132, 133, 134, 135, 136, 137, 138, 139, 140,
@@ -432,6 +457,15 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_GK
     };
 
+    public static readonly CardSubType[] FieldPlayerTypes =
+    {
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C,
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LW,
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RW,
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LD,
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RD,
+    };
+
     public static readonly CardSubType[] TrophyTypes =
     {
         CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_OFFLINE,
@@ -440,7 +474,17 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_PLAYOFF,
     };
 
-    public static readonly CardSubType[] TrainingTypes =
+    public static readonly CardSubType[] TrainingPlayerTypes =
+    {
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_SKATING,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_SHOOTING,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_HANDS,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_CHECKING,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_DEFENSE,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ALL,
+    };
+
+    public static readonly CardSubType[] TrainingGoalieTypes =
     {
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_HIGH,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_LOW,
@@ -448,12 +492,10 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_POSITIONING,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_REBOUNDCONTROL,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ALL,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_SKATING,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_SHOOTING,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_HANDS,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_CHECKING,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_DEFENSE,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ALL,
+    };
+
+    public static readonly CardSubType[] TrainingPositionTypes =
+    {
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_RW_C,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_C_RW,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_POS_LW_C,
@@ -471,6 +513,17 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_LEGS,
         CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_ALL,
     };
+
+    public static readonly CardSubType[] TeamInformationTypes =
+    {
+        CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT,
+        CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE,
+    };
+
+    public static readonly CardSubType[] TrainingTypes = TrainingPlayerTypes
+        .Concat(TrainingGoalieTypes)
+        .Concat(TrainingPositionTypes)
+        .ToArray();
 
     public static readonly CardSubType[] ConsumablesTypes = TrainingTypes
         .Concat(HealingTypes)
@@ -493,42 +546,42 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_PLAYERS,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, PlayerTypes)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, PlayerTypes)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_STAFF_HEADCOACH,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_STADIA,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_KITS,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_BADGES,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_TROPHIES,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, TrophyTypes)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, TrophyTypes)
             });
         }
 
@@ -575,7 +628,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 12,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_STADIA,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
             });
 
             stats.Add(new StickerBookStatResult
@@ -583,7 +636,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 13,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_BALLS,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
             });
 
             stats.Add(new StickerBookStatResult
@@ -591,28 +644,42 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 14,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_TROPHIES_OFFLINE,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_OFFLINE)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_OFFLINE)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 14,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_TROPHIES_ONLINE,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_ONLINE)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_ONLINE)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 14,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_TROPHIES_LIVE,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_LIVE)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_LIVE)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 14,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_TROPHIES_PLAYOFF,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_PLAYOFF)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_PLAYOFF)
+            });
+            stats.Add(new StickerBookStatResult
+            {
+                mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
+                mContextValue = 14,
+                mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_CONSUMABLES,
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, ConsumablesTypes)
+            });
+            stats.Add(new StickerBookStatResult
+            {
+                mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
+                mContextValue = 14,
+                mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_LEGENDS,
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, true, PlayerTypes)
             });
         }
 
@@ -651,70 +718,77 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_PLAYERS,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, PlayerTypes)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, PlayerTypes)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_KITS,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_KITS_HOME,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, 0, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, 0, false, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_KITS_AWAY,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, 1, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, 1, false, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_BADGES,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_STADIA,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_STAFF_HEADCOACH,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_CONSUMABLES,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, ConsumablesTypes)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, ConsumablesTypes)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_CONSUMABLES_CONTRACT,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_CONSUMABLES_TRAINING,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, TrainingTypes)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, TrainingTypes)
+            });
+            stats.Add(new StickerBookStatResult
+            {
+                mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
+                mContextValue = 2,
+                mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_CONSUMABLES_HEALING,
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, false, HealingTypes)
             });
         }
 
@@ -972,7 +1046,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
         switch (consumable.Card.mCardSubTypeId)
         {
-            case >= (CardSubType)51 and <= (CardSubType)62:
+            case var subtype when TrainingPlayerTypes.Contains(subtype) || TrainingGoalieTypes.Contains(subtype):
             {
                 var trainingCard = await UltimateDatabase.GetTrainingCardByDbIdAsync(consumable.Card.mCardDbId);
                 //This might not even be necessary for 1.0 clients
@@ -996,6 +1070,16 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             case CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER:
                 var contractCard = await UltimateDatabase.GetContractCardByDbIdAsync(consumable.Card.mCardDbId);
                 updated.mUsesRemaining += (byte)contractCard.Value;
+                break;
+            case var subtype when HealingTypes.Contains(subtype):
+                var healingCard = await UltimateDatabase.GetHealingCardByDbIdAsync(consumable.Card.mCardDbId);
+                updated.mInjuryGames = healingCard.Amount >= updated.mInjuryGames ? (byte)0 : (byte)(updated.mInjuryGames - healingCard.Amount);
+                break;
+            case var subtype when TrainingPositionTypes.Contains(subtype):
+                var trainingCardMovePosition = await UltimateDatabase.GetTrainingCardByDbIdAsync(consumable.Card.mCardDbId);
+                var destinationPositionId = trainingCardMovePosition.IndexedConsumableId;
+                updated.mPreferredPositionId = (byte)destinationPositionId;
+                updated.mFormationId = (byte)destinationPositionId;
                 break;
             default: throw new NotImplementedException();
         }
@@ -1050,9 +1134,8 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         {
             CardData cardData = (await HutManager.GetCard(loopVar.mCardId)).Card;
             cardData.mUsesRemaining--;
-            //Injuries dont exist in NHL 11 HUT
-            // cardData.mInjuryGames = loopVar.mInjuryGames;
-            // cardData.mInjuryType = loopVar.mInjuryType;
+            cardData.mInjuryGames = loopVar.mInjuryGames;
+            cardData.mInjuryType = loopVar.mInjuryType;
             cardData.mListStats = loopVar.mListStats;
             await HutCardFactory.CreateOrUpdateCard(cardData, userId);
         }
@@ -1242,5 +1325,4 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mVLUE = 10,
         };
     }
-    
 }

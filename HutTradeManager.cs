@@ -33,17 +33,40 @@ public static class HutTradeManager
 
         switch (request.mCardType)
         {
-            case CardSearchTypeParameter.SEARCH_PLAYERS: sql.Append(" AND c.sub_type BETWEEN 0 AND 4"); break;
-            case CardSearchTypeParameter.SEARCH_HEAD_COACH: sql.Append(" AND c.sub_type = 6"); break;
-            case CardSearchTypeParameter.SEARCH_TEAM_INFORMATION: sql.Append(" AND c.sub_type IN (10, 12)"); break;
-            case CardSearchTypeParameter.SEARCH_TRAINING: sql.Append(" AND c.sub_type BETWEEN 51 AND 62"); break;
-            case CardSearchTypeParameter.SEARCH_CONTRACTS: sql.Append(" AND c.sub_type = 201"); break;
-            case CardSearchTypeParameter.SEARCH_ARENAS: sql.Append(" AND c.sub_type = 11"); break;
+            case CardSearchTypeParameter.SEARCH_PLAYERS: sql.Append(" AND sub_type = ANY(@playerTypes)"); break;
+            case CardSearchTypeParameter.SEARCH_HEAD_COACH: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH); break;
+            case CardSearchTypeParameter.SEARCH_TEAM_INFORMATION: sql.Append(" AND sub_type = ANY(@teamInformationTypes)"); break;
+            case CardSearchTypeParameter.SEARCH_TRAINING: sql.Append(" AND sub_type = ANY(@trainingTypes)"); break;
+            case CardSearchTypeParameter.SEARCH_CONTRACTS: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER); break;
+            case CardSearchTypeParameter.SEARCH_ARENAS: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM); break;
+            case CardSearchTypeParameter.SEARCH_HEALING: sql.Append(" AND sub_type = ANY(@healingTypes)"); break;
             case CardSearchTypeParameter.ANY: break;
             default: throw new NotImplementedException();
         }
 
-        if (request.mCategory >= 0 || request.mFormation >= 0 || request.mLevel >= 0 || request.mNation >= 0 || request.mFieldZone >= 0) throw new NotImplementedException();
+        if (request.mFormation >= 0 || request.mFieldZone >= 0) throw new NotImplementedException();
+
+        if (request.mCategory >= (CardSubTypeSearchParameter)1)
+        {
+            switch (request.mCategory)
+            {
+                case CardSubTypeSearchParameter.SEARCH_TEAM_INFORMATION_LOGOS: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE); break;
+                case CardSubTypeSearchParameter.SEARCH_TEAM_INFORMATION_JERSEYS: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT); break;
+                case CardSubTypeSearchParameter.SEARCH_TRAINING_PLAYER: sql.Append(" AND sub_type = ANY(@trainingPlayerTypes)"); break;
+                case CardSubTypeSearchParameter.SEARCH_TRAINING_GOALIE: sql.Append(" AND sub_type = ANY(@trainingGoalieTypes)"); break;
+                case CardSubTypeSearchParameter.SEARCH_TRAINING_POSITION: sql.Append(" AND sub_type = ANY(@trainingPositionTypes)"); break;
+                case CardSubTypeSearchParameter.SEARCH_HEALING_ANY_INJURY: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_ALL); break;
+                case CardSubTypeSearchParameter.SEARCH_HEALING_TORSO: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_TORSO); break;
+                case CardSubTypeSearchParameter.SEARCH_HEALING_ARMS: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_ARMS); break;
+                case CardSubTypeSearchParameter.SEARCH_HEALING_LEGS: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_HEALING_HEALTH_LEGS); break;
+                default: throw new NotImplementedException();
+            }
+        }
+
+        if (request.mLevel >= 0 || request.mSpecialPlayerTypeParameter >= 0 || request.mIncludeRetired >= 0)
+        {
+            //For now dont filter these
+        }
 
         if (request.mLeagueId >= 0) sql.Append(" AND l.leagueid = @league_id");
         if (request.mPosition >= 0) sql.Append(" AND c.sub_type = " + request.mPosition);
@@ -69,6 +92,16 @@ public static class HutTradeManager
         if (request.mMaxCredits > 0) cmd.Parameters.AddWithValue("maxCredits", request.mMaxCredits);
         if (request.mMinBuyPrice > 0) cmd.Parameters.AddWithValue("minBuy", request.mMinBuyPrice);
         if (request.mLeagueId >= 0) cmd.Parameters.AddWithValue("league_id", request.mLeagueId);
+
+        if (request.mCardType == CardSearchTypeParameter.SEARCH_PLAYERS) cmd.Parameters.AddWithValue("playerTypes", CardHouseComponent.PlayerTypes.Select(x => (int)x).ToArray());
+        if (request.mCardType == CardSearchTypeParameter.SEARCH_TEAM_INFORMATION) cmd.Parameters.AddWithValue("teamInformationTypes", CardHouseComponent.TeamInformationTypes.Select(x => (int)x).ToArray());
+        if (request.mCardType == CardSearchTypeParameter.SEARCH_TRAINING) cmd.Parameters.AddWithValue("trainingTypes", CardHouseComponent.TrainingTypes.Select(x => (int)x).ToArray());
+        if (request.mCardType == CardSearchTypeParameter.SEARCH_HEALING) cmd.Parameters.AddWithValue("healingTypes", CardHouseComponent.HealingTypes.Select(x => (int)x).ToArray());
+
+        if (request.mCategory == CardSubTypeSearchParameter.SEARCH_TRAINING_PLAYER) cmd.Parameters.AddWithValue("trainingPlayerTypes", CardHouseComponent.TrainingPlayerTypes.Select(x => (int)x).ToArray());
+        if (request.mCategory == CardSubTypeSearchParameter.SEARCH_TRAINING_GOALIE) cmd.Parameters.AddWithValue("trainingGoalieTypes", CardHouseComponent.TrainingGoalieTypes.Select(x => (int)x).ToArray());
+        if (request.mCategory == CardSubTypeSearchParameter.SEARCH_TRAINING_POSITION) cmd.Parameters.AddWithValue("trainingPositionTypes", CardHouseComponent.TrainingPositionTypes.Select(x => (int)x).ToArray());
+
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -215,8 +248,8 @@ public static class HutTradeManager
 
         cmd.Parameters.AddWithValue("buy_out_price", request.mCredits);
         cmd.Parameters.AddWithValue("trade_state", (int)TradeState.CARDHOUSE_TRADESTATE_ACTIVE);
-        // cmd.Parameters.AddWithValue("duration_seconds", request.mPeriod);
-        cmd.Parameters.AddWithValue("duration_seconds", 20);
+        cmd.Parameters.AddWithValue("duration_seconds", request.mPeriod);
+        // cmd.Parameters.AddWithValue("duration_seconds", 20);
         cmd.Parameters.AddWithValue("created_at_seconds", (long)(uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
 
         var tradeId = await cmd.ExecuteScalarAsync();
@@ -700,7 +733,6 @@ public static class HutTradeManager
 
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("tid", request.mTradeId);
-
         await using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())

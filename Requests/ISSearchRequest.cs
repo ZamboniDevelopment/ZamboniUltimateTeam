@@ -7,13 +7,16 @@ namespace ZamboniUltimateTeam.Requests;
 public struct ISSearchRequest
 {
     [TdfMember("CAT")] 
-    public int mCategory;
+    public CardSubTypeSearchParameter mCategory;
 
     [TdfMember("CTYP")] 
     public CardSearchTypeParameter mCardType;
     
     [TdfMember("FORM")] 
     public int mFormation;
+    
+    [TdfMember("IRET")] 
+    public byte mIncludeRetired;
     
     [TdfMember("LEAG")] 
     public int mLeagueId;
@@ -41,6 +44,9 @@ public struct ISSearchRequest
     
     [TdfMember("NOAC")] 
     public int mNonActive;
+    
+    [TdfMember("PLRT")] 
+    public SpecialPlayerTypeParameter mSpecialPlayerTypeParameter;
     
     [TdfMember("POS")] 
     public int mPosition;

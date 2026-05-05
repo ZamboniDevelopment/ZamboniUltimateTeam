@@ -9,4 +9,5 @@ public enum CardSearchTypeParameter : int
     SEARCH_TRAINING = 4,
     SEARCH_CONTRACTS = 5,
     SEARCH_ARENAS = 6,
+    SEARCH_HEALING = 8,
 }

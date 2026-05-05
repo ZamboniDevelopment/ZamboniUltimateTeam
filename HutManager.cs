@@ -504,7 +504,7 @@ public static class HutManager
         return counts;
     }
 
-    public static async Task<int> GetCardCountAsync(long userId, DeckType deckType, byte? formationId = null, params CardSubType[] subTypes)
+    public static async Task<int> GetCardCountAsync(long userId, DeckType deckType, byte? formationId = null, bool onlyLegends = false, params CardSubType[] subTypes)
     {
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
@@ -514,6 +514,7 @@ public static class HutManager
         sql += " AND deck_type = @deck_type";
 
         if (formationId.HasValue) sql += " AND formation_id = @formationId";
+        if (onlyLegends) sql += " AND db_id > 100000000";
 
         if (subTypes.Length > 0)
         {
@@ -586,9 +587,6 @@ public static class HutManager
         sql.Append(" AND h.deck_type = @deck_type");
         switch (request.mCollectionSearchCardType)
         {
-            //Here we might have to filter based if its in players active roster (SquadInfo)
-            //but seems it's not needed because client has up-to-date info on his Squad all the time,
-            //and client doesn't mind sending him again his whole sticker book
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_ALL: break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_HEADCOACH: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH); break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_BADGE: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE); break;
@@ -599,15 +597,15 @@ public static class HutManager
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_LD: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LD); break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_RD: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RD); break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_GK: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_GK); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL: sql.Append(" AND sub_type = ANY(@playerTypes)"); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL: sql.Append(" AND sub_type = ANY(@fieldPlayerTypes)"); break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER: sql.Append(" AND sub_type = ANY(@playerTypes)"); break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT: sql.Append(" AND sub_type = ANY(@consumableTypes)"); break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_OFFLINE_TROPHY: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_OFFLINE); break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_ONLINE_TROPHY: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_ONLINE); break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_LIVE_TROPHY: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_LIVE); break;
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYOFF_TROPHY: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_PLAYOFF); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_STAR_OF_THE_WEEK: throw new NotImplementedException();
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_LEGEND: throw new NotImplementedException();
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_STAR_OF_THE_WEEK: sql.Append(" AND sub_type = -1"); break; //Not implemented because this is a little ambiguous currently
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_LEGEND: sql.Append(" AND db_id > 100000000"); break;
             default: throw new NotImplementedException();
         }
 
@@ -625,11 +623,8 @@ public static class HutManager
         if (request.mLeagueId >= 0) cmd.Parameters.AddWithValue("league_id", request.mLeagueId);
         if (request.mTeamId >= 0) cmd.Parameters.AddWithValue("team_id", request.mTeamId);
         if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT) cmd.Parameters.AddWithValue("consumableTypes", CardHouseComponent.ConsumablesTypes.Select(x => (int)x).ToArray());
-        if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL
-            || request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER)
-        {
-            cmd.Parameters.AddWithValue("playerTypes", CardHouseComponent.PlayerTypes.Select(x => (int)x).ToArray());
-        }
+        if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER) cmd.Parameters.AddWithValue("playerTypes", CardHouseComponent.PlayerTypes.Select(x => (int)x).ToArray());
+        if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL) cmd.Parameters.AddWithValue("fieldPlayerTypes", CardHouseComponent.FieldPlayerTypes.Select(x => (int)x).ToArray());
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
