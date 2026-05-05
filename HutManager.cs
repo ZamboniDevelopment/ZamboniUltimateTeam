@@ -614,6 +614,10 @@ public static class HutManager
         if (request.mLeagueId >= 0) sql.Append(" AND l.leagueid = @league_id");
         if (request.mTeamId >= 0) sql.Append(" AND h.team_id = @team_id");
 
+        sql.Append(" ORDER BY rating DESC");
+        if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
+        if (request.mStart > 0) sql.Append(" OFFSET " + (request.mStart - 1)); //Not sure if this is correct but seems the most logical
+
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("user_id", userId);
         cmd.Parameters.AddWithValue("deck_type", (int)deckType);

@@ -57,6 +57,9 @@ public static class HutTradeManager
         if (request.mMaxCredits > 0) sql.Append(" AND (CASE WHEN t.highest_bid > 0 THEN t.highest_bid ELSE t.starting_price END) <= @maxCredits");
         if (request.mMinBuyPrice > 0) sql.Append(" AND t.buy_out_price >= @minBuy");
         if (request.mMaxBuyPrice > 0) sql.Append(" AND t.buy_out_price <= @maxBuy AND t.buy_out_price > 0");
+        
+        if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
+        if (request.mStart > 0) sql.Append(" OFFSET " + (request.mStart-1)); //Not sure if this is correct but seems the most logical
 
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
 
@@ -688,11 +691,14 @@ public static class HutTradeManager
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
-        const string sql = @"
+        var sql = new StringBuilder(@"
             SELECT * FROM hut_offer_info 
-            WHERE trade_id = @tid AND offer_state = 1";
+            WHERE trade_id = @tid AND offer_state = 1");
 
-        await using var cmd = new NpgsqlCommand(sql, conn);
+        if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
+        if (request.mStart > 0) sql.Append(" OFFSET " + (request.mStart-1)); //Not sure if this is correct but seems the most logical
+
+        await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("tid", request.mTradeId);
 
         await using var reader = await cmd.ExecuteReaderAsync();
