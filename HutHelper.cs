@@ -132,7 +132,8 @@ public static class HutHelper
         var generalIfo = await HutManager.GetGeneralInfo(userId);
         var currentCredits = generalIfo.Value.mCredits;
 
-        if (currentCredits < amount || amount <= 0) return false;
+        if (currentCredits < amount) return false;
+        if (amount <= 0) return true;
 
         var updated = generalIfo.Value with { mCredits = currentCredits - amount };
 

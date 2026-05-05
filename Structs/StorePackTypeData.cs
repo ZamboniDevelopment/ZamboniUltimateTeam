@@ -12,7 +12,7 @@ public struct StorePackTypeData
     public StorePackAvailability mAvailability;
     
     [TdfMember("CCST")] 
-    public uint mCoinCost;
+    public int mCoinCost;
 
     [TdfMember("END")] 
     public uint mEndDate;

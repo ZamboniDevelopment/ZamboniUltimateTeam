@@ -36,8 +36,8 @@ public struct ISSearchRequest
     [TdfMember("MYTR")] 
     public int mMyTrades;
     
-    [TdfMember("NAT")] 
-    public int mNation;
+    [TdfMember("NUMR")] 
+    public int mNumRetrieve;
     
     [TdfMember("NOAC")] 
     public int mNonActive;

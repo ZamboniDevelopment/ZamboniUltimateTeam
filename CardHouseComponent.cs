@@ -259,22 +259,8 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         {
             mFreePack = 0,
             mPremiumPacksHidden = 0,
-            mPackTypeList = new List<StorePackTypeData>()
-            {
-                new StorePackTypeData
-                {
-                    mAttributes = StorePackAttribute.CARDHOUSE_STOREPACKATTRIBUTES_SAVINGS_COINS,
-                    mAvailability = StorePackAvailability.CARDHOUSE_STOREPACKAVAILABILITY_COINS,
-                    mCoinCost = 1,
-                    mEndDate = 0,
-                    mId = StorePackId.CARDHOUSE_CARD_PACK_TYPE_PEEWEE,
-                    mQuantity = 0,
-                    mSaleType = StoreSaleType.CARDHOUSE_STORESALETYPE_NONE,
-                    mStartDate = 0,
-                    mState = StorePackState.CARDHOUSE_STOREPACKSTATE_ACTIVE
-                }
-            },
-            mServerTime = 0
+            mPackTypeList = OpenablePack.OpenablePacks.Select(op => op.storePackTypeData).ToList(),
+            mServerTime = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
         };
     }
 
@@ -1196,7 +1182,15 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
 
-        var cards = await HutPackFactory.CreatePack(userId, request.mPackType);
+        var openablePack = OpenablePack.OpenablePacks.FirstOrDefault(op => op.packType.Equals(request.mPackType));
+        if (openablePack == null) throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NOT_IMPLEMENTED);
+
+        if (!await HutHelper.Withdraw(userId, openablePack.storePackTypeData.mCoinCost))
+        {
+            throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NOT_ENOUGH_CREDITS);
+        }
+
+        var cards = await openablePack.GiveCards(userId);
         var duplicates = await HutManager.FindDuplicates(userId, cards);
 
         var versionInfo = await HutManager.GetVersionInfo(userId);

@@ -6,7 +6,7 @@ namespace ZamboniUltimateTeam;
 
 public static class HutCardFactory
 {
-    private static readonly Random Random = new();
+    public static readonly Random Random = new();
 
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
