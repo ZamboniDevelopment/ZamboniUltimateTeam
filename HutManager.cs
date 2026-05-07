@@ -357,6 +357,39 @@ public static class HutManager
 
         return cardDataList;
     }
+    
+    public static async Task<List<FriendHistoryEntry>> QueryTeamStats()
+    {
+        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT g.user_id, g.stats, n.user_name
+            FROM hut_general_info g
+            LEFT JOIN hut_name_reservations n ON g.user_id = n.user_id
+            ;";     
+        
+        await using var cmd = new NpgsqlCommand(sql, conn);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        List<FriendHistoryEntry> retList = new List<FriendHistoryEntry>();
+
+        while (await reader.ReadAsync())
+        {
+            int[] stats = reader.GetFieldValue<int[]>(reader.GetOrdinal("stats"));
+            retList.Add(new FriendHistoryEntry
+            {
+                mLosses = (short)stats[9],
+                mOpponentId = (uint)reader.GetInt64(reader.GetOrdinal("user_id")),
+                mOpponentName = reader.GetString(reader.GetOrdinal("user_name")),
+                mOverTimeLosses = (short)stats[10],
+                mWins = (short)stats[8]
+            });
+        }
+
+        return retList;
+    }
 
 
     public static async Task<(CardData Card, DeckType DeckType)> GetCard(long cardId, long userId = 0)

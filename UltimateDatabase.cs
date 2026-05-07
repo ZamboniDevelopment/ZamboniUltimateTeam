@@ -280,8 +280,8 @@ public static class UltimateDatabase
                 mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE,
                 mCardDbId = cardDbId,
                 mFormationId = reader.GetByte(reader.GetOrdinal("formationid")),
-                // mFREE = 40, //
-                mCareerRemaining = 50,
+                // mFREE = 40, //Does this has meaning?
+                mCareerRemaining = (byte)(rating >= 85 ? 500 : 1000),
                 mInjuryGames = reader.GetByte(reader.GetOrdinal("injuryduration")),
                 mInjuryType = reader.GetByte(reader.GetOrdinal("injury")),
                 mMaxTrainingCardsCanApply = HutHelper.DetermineTrainingCardsCanApply(rating),
@@ -295,7 +295,7 @@ public static class UltimateDatabase
                 mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
                 mTeamId = (uint)reader.GetInt32(reader.GetOrdinal("teamid")),
                 mListTrainingCards = new List<int>(),
-                mUsesRemaining = 20
+                mUsesRemaining = (byte)(rating >= 85 ? 30 : 40)
             };
         }
 

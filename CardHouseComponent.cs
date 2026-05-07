@@ -1295,10 +1295,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
         return new GetFriendHistoryResponse
         {
-            mHistoryList = new List<FriendHistoryEntry>()
-            {
-                //TODO Query hut_reports_l
-            }
+            mHistoryList = await HutManager.QueryTeamStats()
         };
     }
 

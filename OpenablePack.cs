@@ -57,7 +57,7 @@ public class OpenablePack
             {
                 mAttributes = StorePackAttribute.CARDHOUSE_STOREPACKATTRIBUTES_SAVINGS_COINS,
                 mAvailability = StorePackAvailability.CARDHOUSE_STOREPACKAVAILABILITY_COINS,
-                mCoinCost = 1500,
+                mCoinCost = 1000,
                 mEndDate = 0,
                 mId = StorePackId.CARDHOUSE_CARD_PACK_TYPE_PLAYERS_PREMIUM,
                 mQuantity = 0,
@@ -91,7 +91,7 @@ public class OpenablePack
             {
                 mAttributes = StorePackAttribute.CARDHOUSE_STOREPACKATTRIBUTES_SAVINGS_COINS,
                 mAvailability = StorePackAvailability.CARDHOUSE_STOREPACKAVAILABILITY_COINS,
-                mCoinCost = 500,
+                mCoinCost = 300,
                 mEndDate = 0,
                 mId = StorePackId.CARDHOUSE_CARD_PACK_TYPE_TEAM_ITEMS_PREMIUM_MEGA_DEAL,
                 mQuantity = 0,
@@ -197,8 +197,8 @@ public class OpenablePack
                 cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(0, 80), false, CardHouseComponent.PlayerTypes));
                 cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(0, 80), false, CardHouseComponent.PlayerTypes));
                 cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(0, 80), false, CardHouseComponent.PlayerTypes));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(0, 88), false, CardHouseComponent.PlayerTypes));
-                if (HutCardFactory.Random.Next(100) < 5) //5% Chance
+                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(0, 84), false, CardHouseComponent.PlayerTypes));
+                if (HutCardFactory.Random.Next(100) < 2) //2% Chance
                 {
                     cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(85, 99), true, CardHouseComponent.PlayerTypes));
                 }
@@ -241,10 +241,15 @@ public class OpenablePack
             {
                 cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId));
                 cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId));
                 cardDataList.Add(await HutCardFactory.CreateRandomLogoCard(userId));
                 if (HutCardFactory.Random.Next(100) < 25) //25% Chance
                 {
                     cardDataList.Add(await HutCardFactory.CreateRandomStadiumCard(userId));
+                }
+                if (HutCardFactory.Random.Next(100) < 1) //1% Chance
+                {
+                    cardDataList.Add(await HutCardFactory.CreateNonPlayerCard(userId, 6200006, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM));
                 }
 
                 return cardDataList;
@@ -254,9 +259,13 @@ public class OpenablePack
             {
                 cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId));
                 cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId));
                 cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId, null, true));
                 cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId, null, true));
 
+                cardDataList.Add(await HutCardFactory.CreateRandomLogoCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateRandomLogoCard(userId));
                 cardDataList.Add(await HutCardFactory.CreateRandomLogoCard(userId));
                 cardDataList.Add(await HutCardFactory.CreateRandomLogoCard(userId));
                 cardDataList.Add(await HutCardFactory.CreateNonPlayerCard(userId, (uint)HutCardFactory.Random.Next(6200000, 6200006), CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM));
@@ -297,13 +306,13 @@ public class OpenablePack
                 cardDataList.Add(await HutCardFactory.CreateRandomTrainingCard(userId));
                 cardDataList.Add(await HutCardFactory.CreateRandomHealingCard(userId));
                 cardDataList.Add(await HutCardFactory.CreateRandomContractCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateRandomContractCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateRandomTrainingCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateRandomHealingCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateRandomContractCard(userId));
+                cardDataList.Add(await HutCardFactory.CreateRandomTrainingCard(userId));
                 if (HutCardFactory.Random.Next(100) < 50) //50% Chance
                 {
-                    cardDataList.Add(await HutCardFactory.CreateRandomContractCard(userId));
-                    cardDataList.Add(await HutCardFactory.CreateRandomTrainingCard(userId));
-                    cardDataList.Add(await HutCardFactory.CreateRandomHealingCard(userId));
-                    cardDataList.Add(await HutCardFactory.CreateRandomContractCard(userId));
-                    cardDataList.Add(await HutCardFactory.CreateRandomTrainingCard(userId));
                     cardDataList.Add(await HutCardFactory.CreateRandomHealingCard(userId));
                     cardDataList.Add(await HutCardFactory.CreateRandomContractCard(userId));
                     cardDataList.Add(await HutCardFactory.CreateRandomTrainingCard(userId));
