@@ -10,14 +10,14 @@ public struct SquadSearchRequest
     public UltimateTeamClientType mClientType;
 
     [TdfMember("MAXN")] 
-    public byte mMAXN;
+    public byte mMaxNumber;
     
     [TdfMember("NAME")] 
-    public string mNAME;
+    public string mName;
     
     [TdfMember("TOR")] 
-    public byte mTOR;
+    public byte mTeamOverall;
     
     [TdfMember("UID")] 
-    public long mUID;
+    public long mUserId;
 }

@@ -210,7 +210,7 @@ public static class HutManager
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
-        const string sql = "SELECT * from hut_squad_info";
+        const string sql = "SELECT * FROM hut_squad_info ORDER BY RANDOM() LIMIT 10;";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
         await using var reader = await cmd.ExecuteReaderAsync();
