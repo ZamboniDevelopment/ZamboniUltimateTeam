@@ -181,22 +181,29 @@ public static class HutManager
             }
 
             var logoCardResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE);
+            var homeJerseyResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_HOME_KIT);
+            var awayJerseyResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_AWAY_KIT);
+            var stadiumResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_STADIUM);
+            
             var logoCardDbId = logoCardResult[0].mCardDbId;
+            var homeJerseyDbId = homeJerseyResult[0].mCardDbId;
+            var awayJerseyDbId = awayJerseyResult[0].mCardDbId;
+            var stadiumDbId = stadiumResult[0].mCardDbId;
 
             return new SquadInfo
             {
                 mChemistry = (uint)reader.GetInt32(reader.GetOrdinal("chemistry")),
-                mCHNG = (uint)chngDebugCounter++,
+                mCHNG = 0,
                 mFormationId = (uint)reader.GetInt32(reader.GetOrdinal("formation_id")),
-                // mJERA = 0,
-                // mJERH = 0,
+                mJerseyAwayDbId = awayJerseyDbId,
+                mJerseyHomeDbId = homeJerseyDbId,
                 mLines = reader.GetFieldValue<int[]>(reader.GetOrdinal("lines")).ToList(),
                 mManager = (await GetCard(reader.GetInt64(reader.GetOrdinal("manager")))).Card,
                 mSquadName = reader.GetString(reader.GetOrdinal("squad_name")),
                 mPlayers = playersOrdered,
                 mStarRating = (uint)reader.GetInt32(reader.GetOrdinal("star_rating")),
                 mSquadId = (uint)reader.GetInt32(reader.GetOrdinal("squad_id")),
-                // mSTAD = 0,
+                mStadiumDbId = stadiumDbId,
                 mTeamAbbreviation = reader.GetString(reader.GetOrdinal("team_abbreviation")),
                 mLogoCardDbId = logoCardDbId
             };

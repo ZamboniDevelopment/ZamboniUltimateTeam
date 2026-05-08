@@ -16,10 +16,10 @@ public struct SquadLoadResponse
     public int mFormation;
     
     [TdfMember("JERA")] 
-    public int mJERA;
+    public uint mJerseyAwayDbId;
     
     [TdfMember("JERH")] 
-    public int mJERH;
+    public uint mJerseyHomeDbId;
     
     [TdfMember("LINE")] 
     public List<int> mLines;
@@ -43,7 +43,7 @@ public struct SquadLoadResponse
     public int mSquadId;
     
     [TdfMember("STAD")] 
-    public int mSTAD;
+    public uint mStadiumDbId;
     
     [TdfMember("TMAB")] 
     public string mTeamAbbreviation;

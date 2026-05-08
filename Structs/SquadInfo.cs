@@ -15,10 +15,10 @@ public struct SquadInfo
     public uint mFormationId;
     
     [TdfMember("JERA")] 
-    public int mJERA;
+    public uint mJerseyAwayDbId;
     
     [TdfMember("JERH")] 
-    public int mJERH;
+    public uint mJerseyHomeDbId;
     
     [TdfMember("LINE")] 
     public List<int> mLines;
@@ -42,7 +42,7 @@ public struct SquadInfo
     public uint mSquadId;
     
     [TdfMember("STAD")] 
-    public int mSTAD;
+    public uint mStadiumDbId;
     
     [TdfMember("TMAB")] 
     public string mTeamAbbreviation;

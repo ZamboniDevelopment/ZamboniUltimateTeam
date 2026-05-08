@@ -1246,8 +1246,8 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mChemistry = (int)squadInfo.mChemistry,
             mCHNG = (int)squadInfo.mCHNG,
             mFormation = (int)squadInfo.mFormationId,
-            mJERA = squadInfo.mJERA,
-            mJERH = squadInfo.mJERH,
+            mJerseyAwayDbId = squadInfo.mJerseyAwayDbId,
+            mJerseyHomeDbId = squadInfo.mJerseyHomeDbId,
             mLines = squadInfo.mLines,
             mLogoCardDbId = squadInfo.mLogoCardDbId,
             mManager = squadInfo.mManager,
@@ -1255,9 +1255,9 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mPlayers = squadInfo.mPlayers,
             mStarRating = (int)squadInfo.mStarRating,
             mSquadId = 0,
-            mSTAD = 0,
+            mStadiumDbId = squadInfo.mStadiumDbId,
             mTeamAbbreviation = squadInfo.mTeamAbbreviation,
-            mUserId = request.mUserId
+            mUserId = request.mUserId,
         };
     }
 
