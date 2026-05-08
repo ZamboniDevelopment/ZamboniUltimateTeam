@@ -281,7 +281,7 @@ public static class UltimateDatabase
                 mCardDbId = cardDbId,
                 mFormationId = reader.GetByte(reader.GetOrdinal("formationid")),
                 // mFREE = 40, //Does this has meaning?
-                mCareerRemaining = (byte)(rating >= 85 ? 500 : 1000),
+                mCareerRemaining = (byte)(rating >= 85 ? byte.MaxValue-100 : byte.MaxValue),
                 mInjuryGames = reader.GetByte(reader.GetOrdinal("injuryduration")),
                 mInjuryType = reader.GetByte(reader.GetOrdinal("injury")),
                 mMaxTrainingCardsCanApply = HutHelper.DetermineTrainingCardsCanApply(rating),
