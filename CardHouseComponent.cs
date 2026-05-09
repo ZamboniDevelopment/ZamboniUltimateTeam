@@ -208,9 +208,9 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 -2, //Game End Negative: Puck deduction per icing
                 49,
                 -2, //Game End Negative: Puck deduction per offside
-                51,
-                50, //Bid increment
-                13,
+                313,
+                50, //Create Auction Bid increment
+                129,
                 200, //Default starting price for auction
                 200, //Min starting price for auction
                 100000, //Max starting price for auction
@@ -218,27 +218,27 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 100000, //Max buyout price for auction
                 250, //Starting bid vs buyout differential first jump something idk
                 0, //Default buyout price for auction
-                22,
-                23,
-                24,
-                25,
-                26,
-                27,
-                28,
-                29,
-                100000, //Search min bet starting
-                40,
-                100000, //Search max bet starting
-                31,
-                100000, //Search min buyout starting
-                32,
-                100000, //Search max buyout starting
-                33,
-                34,
-                35,
-                36,
-                37,
-                81, 82, 83, 
+                603,
+                604,
+                605,
+                606,
+                607,
+                608,
+                609,
+                200, //Search min bet minimum
+                100000, //Search min bet maximum
+                200, //Search max bet starting
+                100000, //Search max bet maximum
+                200, //Search min buyout starting
+                100000, //Search min buyout maximum
+                200, //Search max buyout starting
+                100000, //Search max buyout maximum
+                100000, //Bid bid Max amount
+                50, //Bid bid increment
+                616,
+                100000, //Trade offer bid Max amount
+                50, //Trade offer bid increment
+                311, 362, 173, 
                 10, //Difficulty Rookie Multiplier
                 11, //Difficulty Pro Multiplier
                 12, //Difficulty All-Star Multiplier
