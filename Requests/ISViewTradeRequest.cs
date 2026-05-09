@@ -6,7 +6,7 @@ namespace ZamboniUltimateTeam.Requests;
 public struct ISViewTradeRequest
 {
     [TdfMember("REM")] 
-    public uint mRemove;
+    public int mRemove;
 
     [TdfMember("TID")] 
     public long mTradeId;
