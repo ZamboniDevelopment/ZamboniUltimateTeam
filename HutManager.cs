@@ -654,7 +654,7 @@ public static class HutManager
 
         sql.Append(" ORDER BY rating DESC");
         if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
-        if (request.mStart > 0) sql.Append(" OFFSET " + (request.mStart - 1)); //Not sure if this is correct but seems the most logical
+        if (request.mStart > 0) sql.Append(" OFFSET " + request.mStart);
 
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("user_id", userId);

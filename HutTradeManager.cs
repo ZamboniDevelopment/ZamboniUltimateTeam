@@ -16,7 +16,8 @@ public static class HutTradeManager
     public static async Task<ISSearchResponse> SearchTradesAsync(ISSearchRequest request, long searcherUserId)
     {
         List<ISTradeInfo> results = new List<ISTradeInfo>();
-
+        int totalCount = 0;
+        
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
@@ -25,6 +26,7 @@ public static class HutTradeManager
         var sql = new StringBuilder(@"
             SELECT t.*, 
                    c.*, 
+                   COUNT(*) OVER() as total_matches,
                    GREATEST(0, (t.created_at_seconds + t.duration_seconds) - EXTRACT(EPOCH FROM NOW()))::INT AS expire_time
             FROM hut_trade_info t
             INNER JOIN hut_cards c ON t.card_id = c.card_id
@@ -82,7 +84,7 @@ public static class HutTradeManager
         if (request.mMaxBuyPrice > 0) sql.Append(" AND t.buy_out_price <= @maxBuy AND t.buy_out_price > 0");
         
         if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
-        if (request.mStart > 0) sql.Append(" OFFSET " + (request.mStart-1)); //Not sure if this is correct but seems the most logical
+        if (request.mStart > 0) sql.Append(" OFFSET " + request.mStart);
 
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
 
@@ -107,13 +109,14 @@ public static class HutTradeManager
 
         while (await reader.ReadAsync())
         {
+            if (totalCount == 0) totalCount = Convert.ToInt32(reader["total_matches"]);
             results.Add(await HutHelper.ReadTrade(reader, searcherUserId));
         }
 
         return new ISSearchResponse
         {
             mSearchResults = results,
-            mTotalCount = results.Count
+            mTotalCount = totalCount
         };
     }
 
@@ -750,7 +753,7 @@ public static class HutTradeManager
             WHERE trade_id = @tid AND offer_state = 1");
 
         if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
-        if (request.mStart > 0) sql.Append(" OFFSET " + (request.mStart-1)); //Not sure if this is correct but seems the most logical
+        if (request.mStart > 0) sql.Append(" OFFSET " + (request.mStart));
 
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("tid", request.mTradeId);
