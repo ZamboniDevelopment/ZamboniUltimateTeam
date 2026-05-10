@@ -556,8 +556,9 @@ public static class HutTradeManager
 
         await HutHelper.Deposit(sellerId, price);
 
-        var cardData = (await HutManager.GetCard(cardId)).Card;
+        var cardData = (await HutManager.GetCard(cardId, sellerId)).Card;
         cardData.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
+        cardData.mNumberOfOwners = (byte)(cardData.mNumberOfOwners + 1);
         
         await HutCardFactory.CreateOrUpdateCard(cardData, buyerId, DeckType.CARDHOUSE_DECK_UNASSIGNED);
         await HutManager.IncrementVersionInfo(buyerId, HutManager.VersionType.Unassigned);
@@ -566,9 +567,10 @@ public static class HutTradeManager
         {
             foreach (var offerBackCardId in offerBackCards)
             {
-                var offerBackCardData = await HutManager.GetCard(offerBackCardId, buyerId);
-                offerBackCardData.Card.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
-                await HutCardFactory.CreateOrUpdateCard(offerBackCardData.Card, sellerId, DeckType.CARDHOUSE_DECK_UNASSIGNED);
+                var offerBackCardData = (await HutManager.GetCard(offerBackCardId, buyerId)).Card;
+                offerBackCardData.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
+                offerBackCardData.mNumberOfOwners = (byte)(offerBackCardData.mNumberOfOwners + 1);
+                await HutCardFactory.CreateOrUpdateCard(offerBackCardData, sellerId, DeckType.CARDHOUSE_DECK_UNASSIGNED);
             }
 
             await HutManager.IncrementVersionInfo(sellerId, HutManager.VersionType.Unassigned);

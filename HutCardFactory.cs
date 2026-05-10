@@ -185,7 +185,7 @@ public static class HutCardFactory
         INSERT INTO hut_cards (
             card_id, user_id, attributes, state_id, db_id, formation_id, 
             free, career_remaining, injury_games, injury_type, 
-            morale, preferred_position_id, discard_price, 
+            morale, owners, preferred_position_id, discard_price, 
             rare_flag, rating, salary_cap,
             list_stats, sub_type, date_issued,
             team_id, list_training_cards, uses_remaining
@@ -194,7 +194,7 @@ public static class HutCardFactory
         VALUES (
             {cardIdValue}, @user_id, @attributes, @state_id, @db_id, @formation_id, 
             @free, @career_remaining, @injury_games, @injury_type, 
-            @morale, @preferred_position_id, @discard_price, 
+            @morale, @owners, @preferred_position_id, @discard_price, 
             @rare_flag, @rating, @salary_cap,
             @list_stats, @sub_type, @date_issued, @team_id, @list_training_cards, 
             @uses_remaining
@@ -211,6 +211,7 @@ public static class HutCardFactory
             injury_games = EXCLUDED.injury_games,
             injury_type = EXCLUDED.injury_type,
             morale = EXCLUDED.morale,
+            owners = EXCLUDED.owners,
             preferred_position_id = EXCLUDED.preferred_position_id,
             discard_price = EXCLUDED.discard_price,
             rare_flag = EXCLUDED.rare_flag,
@@ -238,6 +239,7 @@ public static class HutCardFactory
         cmd.Parameters.AddWithValue("injury_games", (short)cardData.mInjuryGames);
         cmd.Parameters.AddWithValue("injury_type", (short)cardData.mInjuryType);
         cmd.Parameters.AddWithValue("morale", (short)cardData.mMaxTrainingCardsCanApply);
+        cmd.Parameters.AddWithValue("owners", (short)cardData.mNumberOfOwners);
         cmd.Parameters.AddWithValue("preferred_position_id", (int)cardData.mPreferredPositionId);
         cmd.Parameters.AddWithValue("discard_price", (int)cardData.mDiscardPrice);
         cmd.Parameters.AddWithValue("rare_flag", (int)cardData.mRareFlag);

@@ -132,6 +132,7 @@ public static class UltimateDatabase
                     injury_games SMALLINT,
                     injury_type SMALLINT,
                     morale SMALLINT, --mMaxTrainingCardsCanApply/Potential
+                    owners SMALLINT,
                     preferred_position_id SMALLINT,
                     discard_price SMALLINT,
                     rare_flag SMALLINT,
@@ -284,6 +285,7 @@ public static class UltimateDatabase
                 mCareerRemaining = reader.GetByte(reader.GetOrdinal("attribute8")),
                 mInjuryGames = reader.GetByte(reader.GetOrdinal("injuryduration")),
                 mInjuryType = reader.GetByte(reader.GetOrdinal("injury")),
+                mNumberOfOwners = 1,
                 mMaxTrainingCardsCanApply = reader.GetByte(reader.GetOrdinal("attribute7")),
                 mPreferredPositionId = reader.GetByte(reader.GetOrdinal("preferredposition")),
                 mDiscardPrice = 0,

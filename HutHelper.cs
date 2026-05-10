@@ -22,7 +22,7 @@ public static class HutHelper
             mInjuryGames = (byte)reader.GetInt16(reader.GetOrdinal("injury_games")),
             mInjuryType = (byte)reader.GetInt16(reader.GetOrdinal("injury_type")),
             mMaxTrainingCardsCanApply = (byte)reader.GetInt16(reader.GetOrdinal("morale")),
-            mNumberOfOwners = 1, //(byte)reader.GetInt16(reader.GetOrdinal("free")), ///TODO
+            mNumberOfOwners = (byte)reader.GetInt16(reader.GetOrdinal("owners")),
             mPreferredPositionId = (byte)reader.GetInt16(reader.GetOrdinal("preferred_position_id")),
             mDiscardPrice = (short)reader.GetInt16(reader.GetOrdinal("discard_price")),
             mRareFlag = (byte)reader.GetInt16(reader.GetOrdinal("rare_flag")),
