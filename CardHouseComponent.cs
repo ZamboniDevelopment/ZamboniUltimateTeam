@@ -1,5 +1,4 @@
 using Blaze3SDK;
-using Blaze3SDK.Blaze.Example;
 using BlazeCommon;
 using ZamboniUltimateTeam.Requests;
 using ZamboniUltimateTeam.Responses;
@@ -238,7 +237,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 616,
                 100000, //Trade offer bid Max amount
                 50, //Trade offer bid increment
-                311, 362, 173, 
+                311, 362, 173,
                 10, //Difficulty Rookie Multiplier
                 11, //Difficulty Pro Multiplier
                 12, //Difficulty All-Star Multiplier
@@ -1291,8 +1290,6 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
     public override async Task<GetFriendHistoryResponse> GetFriendHistoryAsync(NumericRequest request, BlazeRpcContext context)
     {
-        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-
         return new GetFriendHistoryResponse
         {
             mHistoryList = await HutManager.QueryTeamStats()
@@ -1305,13 +1302,10 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
         return new GetFriendGameListResponse
         {
-            mGameList = new List<FriendGameEntry>
-            {
-                //TODO Query hut_reports_l
-            }
+            mGameList = await HutManager.QueryFriendGameList(userId, request)
         };
     }
-    
+
     public override async Task<GetPersistenceInfoResponse> GetPersistenceInfoAsync(NumericRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);

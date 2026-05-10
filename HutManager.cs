@@ -184,7 +184,7 @@ public static class HutManager
             var homeJerseyResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_HOME_KIT);
             var awayJerseyResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_AWAY_KIT);
             var stadiumResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_STADIUM);
-            
+
             var logoCardDbId = logoCardResult[0].mCardDbId;
             var homeJerseyDbId = homeJerseyResult[0].mCardDbId;
             var awayJerseyDbId = awayJerseyResult[0].mCardDbId;
@@ -227,13 +227,13 @@ public static class HutManager
         {
             var loopUserId = reader.GetInt64(reader.GetOrdinal("user_id"));
             if (loopUserId == excludedUserId) continue;
-            
+
             var logoCardResult = await GetCardList(loopUserId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE);
             var logoCardDbId = logoCardResult[0].mCardDbId;
 
             var gamerInfo = await GetGamerInfo(loopUserId); //Do this more efficiently
             var abbreviation = gamerInfo.Value.mTeamAbbreviation;
-            
+
             offlineTeams.Add(new OfflineOpponentTeam
             {
                 mLogoDbId = logoCardDbId,
@@ -364,7 +364,7 @@ public static class HutManager
 
         return cardDataList;
     }
-    
+
     public static async Task<List<FriendHistoryEntry>> QueryTeamStats()
     {
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
@@ -373,29 +373,117 @@ public static class HutManager
         const string sql = @"
             SELECT g.user_id, g.stats, n.user_name
             FROM hut_general_info g
-            LEFT JOIN hut_name_reservations n ON g.user_id = n.user_id
-            ;";     
-        
-        await using var cmd = new NpgsqlCommand(sql, conn);
+            LEFT JOIN hut_name_reservations n 
+                ON g.user_id = n.user_id 
+                AND n.deleted_at IS NULL
+            ORDER BY g.stats[9] DESC
+            ;";
 
+        await using var cmd = new NpgsqlCommand(sql, conn);
         await using var reader = await cmd.ExecuteReaderAsync();
 
         List<FriendHistoryEntry> retList = new List<FriendHistoryEntry>();
 
+        int statsOrdinal = reader.GetOrdinal("stats");
+        int userIdOrdinal = reader.GetOrdinal("user_id");
+        int nameOrdinal = reader.GetOrdinal("user_name");
+
+        int position = 1;
+
         while (await reader.ReadAsync())
         {
-            int[] stats = reader.GetFieldValue<int[]>(reader.GetOrdinal("stats"));
+            int[] stats = reader.GetFieldValue<int[]>(statsOrdinal);
+
+            string rawName = reader.IsDBNull(nameOrdinal) ? "Unknown User" : reader.GetString(nameOrdinal);
+
             retList.Add(new FriendHistoryEntry
             {
                 mLosses = (short)stats[9],
-                mOpponentId = (uint)reader.GetInt64(reader.GetOrdinal("user_id")),
-                mOpponentName = reader.GetString(reader.GetOrdinal("user_name")),
+                mOpponentId = (uint)reader.GetInt64(userIdOrdinal),
+                mOpponentName = $"{position:D2}. {rawName}",
                 mOverTimeLosses = (short)stats[10],
                 mWins = (short)stats[8]
             });
+            position++;
         }
 
         return retList;
+    }
+
+    public static async Task<List<FriendGameEntry>> QueryFriendGameList(long userId, GetFriendGameListRequest request)
+    {
+        var games = new List<FriendGameEntry>();
+
+        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+        SELECT 
+            mine.score, 
+            opp.score as opp_score, 
+            mine.disc,
+            mine.quit,
+            g.ot,
+            g.shootout,
+            mine.created_at
+        FROM hut_reports_l mine
+        INNER JOIN hut_reports_l opp ON mine.game_id = opp.game_id AND mine.user_id != opp.user_id
+        INNER JOIN games_l g ON mine.game_id = g.game_id
+        WHERE mine.user_id = @userId
+          AND opp.user_id = @opponentId
+          AND mine.score IS NOT NULL 
+          AND opp.score IS NOT NULL
+        ORDER BY mine.created_at DESC
+        LIMIT @limit;";
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("userId", userId);
+        cmd.Parameters.AddWithValue("opponentId", request.mOpponentId);
+        cmd.Parameters.AddWithValue("limit", (int)request.mMaxResults);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        int myScoreOrd = reader.GetOrdinal("score");
+        int oppScoreOrd = reader.GetOrdinal("opp_score");
+        int discOrd = reader.GetOrdinal("disc");
+        int quitOrd = reader.GetOrdinal("quit");
+        int otOrd = reader.GetOrdinal("ot");
+        int soOrd = reader.GetOrdinal("shootout");
+        int timeOrd = reader.GetOrdinal("created_at");
+
+        while (await reader.ReadAsync())
+        {
+            if (reader.IsDBNull(myScoreOrd) || reader.IsDBNull(oppScoreOrd)) continue;
+
+            int myScore = reader.GetInt32(myScoreOrd);
+            int oppScore = reader.GetInt32(oppScoreOrd);
+            bool isDisc = reader.GetInt32(discOrd) == 1;
+            bool isQuit = reader.GetInt32(quitOrd) == 1;
+            bool wentOverTime = reader.GetInt32(otOrd) == 1 || reader.GetInt32(soOrd) == 1;
+
+            CardHouseGameResult finalResult;
+
+            if (isDisc)
+                finalResult = CardHouseGameResult.GAME_RESULT_DISC;
+            else if (isQuit)
+                finalResult = CardHouseGameResult.GAME_RESULT_QUIT;
+            else if (myScore > oppScore)
+                finalResult = CardHouseGameResult.GAME_RESULT_WIN;
+            else if (wentOverTime)
+                finalResult = CardHouseGameResult.GAME_RESULT_OT;
+            else
+                finalResult = CardHouseGameResult.GAME_RESULT_LOSS;
+
+            games.Add(new FriendGameEntry
+            {
+                mMyGoals = (byte)myScore,
+                mOpponentsGoals = (byte)oppScore,
+                mResult = finalResult,
+                mPlayedAt = (uint)((DateTimeOffset)reader.GetDateTime(timeOrd)).ToUnixTimeSeconds()
+            });
+        }
+
+        return games;
     }
 
 
