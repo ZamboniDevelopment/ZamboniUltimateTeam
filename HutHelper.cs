@@ -8,9 +8,8 @@ public static class HutHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public static async Task<CardData> ReadCardData(NpgsqlDataReader reader)
+    public static CardData ReadCardData(NpgsqlDataReader reader)
     {
-        var numberOfOwners = await NumberOfOwners((uint)reader.GetInt32(reader.GetOrdinal("db_id")));
         var cardData = new CardData
         {
             mAttributes = reader.GetFieldValue<byte[]>(reader.GetOrdinal("attributes")).ToList(),
@@ -23,7 +22,7 @@ public static class HutHelper
             mInjuryGames = (byte)reader.GetInt16(reader.GetOrdinal("injury_games")),
             mInjuryType = (byte)reader.GetInt16(reader.GetOrdinal("injury_type")),
             mMaxTrainingCardsCanApply = (byte)reader.GetInt16(reader.GetOrdinal("morale")),
-            mNumberOfOwners = (byte)numberOfOwners,
+            mNumberOfOwners = 1, //(byte)reader.GetInt16(reader.GetOrdinal("free")), ///TODO
             mPreferredPositionId = (byte)reader.GetInt16(reader.GetOrdinal("preferred_position_id")),
             mDiscardPrice = (short)reader.GetInt16(reader.GetOrdinal("discard_price")),
             mRareFlag = (byte)reader.GetInt16(reader.GetOrdinal("rare_flag")),
@@ -106,24 +105,6 @@ public static class HutHelper
         }
 
         return trainingCardIds;
-    }
-    
-    public static async Task<int> NumberOfOwners(uint cardDbId)
-    {
-        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
-        await conn.OpenAsync();
-
-        var sql = "SELECT COUNT(*) FROM hut_cards WHERE db_id = " + cardDbId;
-
-        await using var cmd = new NpgsqlCommand(sql, conn);
-        await using var reader = await cmd.ExecuteReaderAsync();
-
-        if (await reader.ReadAsync())
-        {
-            return reader.GetInt32(0);
-        }
-
-        return 0;
     }
 
     public static async Task<ISOfferInfo> ReadOffer(NpgsqlDataReader reader)

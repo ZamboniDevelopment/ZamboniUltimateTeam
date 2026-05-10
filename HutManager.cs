@@ -359,7 +359,7 @@ public static class HutManager
 
         while (await reader.ReadAsync())
         {
-            cardDataList.Add(await HutHelper.ReadCardData(reader));
+            cardDataList.Add(HutHelper.ReadCardData(reader));
         }
 
         return cardDataList;
@@ -507,7 +507,7 @@ public static class HutManager
 
         if (await reader.ReadAsync())
         {
-            var card = await HutHelper.ReadCardData(reader);
+            var card = HutHelper.ReadCardData(reader);
             DeckType deckType = (DeckType)reader.GetInt32(reader.GetOrdinal("deck_type"));
 
             return (card, deckType);
@@ -536,7 +536,7 @@ public static class HutManager
 
         if (await reader.ReadAsync())
         {
-            var card = await HutHelper.ReadCardData(reader);
+            var card = HutHelper.ReadCardData(reader);
             DeckType deckType = (DeckType)reader.GetInt32(reader.GetOrdinal("deck_type"));
 
             return (card, deckType);
@@ -760,7 +760,7 @@ public static class HutManager
 
         while (await reader.ReadAsync())
         {
-            cardDataList.Add(await HutHelper.ReadCardData(reader));
+            cardDataList.Add(HutHelper.ReadCardData(reader));
         }
 
         return cardDataList;
