@@ -294,7 +294,7 @@ public static class UltimateDatabase
                 mSalaryCap = HutHelper.DetermineSalary(rating),
                 mListStats = new List<int>
                 {
-                    0,0,0,0,0
+                    0,0,0,0,0,0,0,0,0,0
                 },
                 mCardSubTypeId = (CardSubType)reader.GetInt16(reader.GetOrdinal("fieldpos")),
                 mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
