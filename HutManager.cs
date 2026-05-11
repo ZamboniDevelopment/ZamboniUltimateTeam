@@ -486,7 +486,6 @@ public static class HutManager
         return games;
     }
 
-
     public static async Task<(CardData Card, DeckType DeckType)> GetCard(long cardId, long userId = 0)
     {
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);

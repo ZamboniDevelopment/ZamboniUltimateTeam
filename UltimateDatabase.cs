@@ -265,19 +265,20 @@ public static class UltimateDatabase
         if (await reader.ReadAsync())
         {
             short rating = reader.GetInt16(reader.GetOrdinal("rating"));
+            List<byte> attributes = new List<byte>
+            {
+                reader.GetByte(reader.GetOrdinal("attribute1")),
+                reader.GetByte(reader.GetOrdinal("attribute2")),
+                reader.GetByte(reader.GetOrdinal("attribute3")),
+                reader.GetByte(reader.GetOrdinal("attribute4")),
+                reader.GetByte(reader.GetOrdinal("attribute5")),
+                reader.GetByte(reader.GetOrdinal("attribute6")),
+                reader.GetByte(reader.GetOrdinal("attribute7")),
+                reader.GetByte(reader.GetOrdinal("attribute8")),
+            };
             return new CardData
             {
-                mAttributes = new List<byte>
-                {
-                    reader.GetByte(reader.GetOrdinal("attribute1")),
-                    reader.GetByte(reader.GetOrdinal("attribute2")),
-                    reader.GetByte(reader.GetOrdinal("attribute3")),
-                    reader.GetByte(reader.GetOrdinal("attribute4")),
-                    reader.GetByte(reader.GetOrdinal("attribute5")),
-                    reader.GetByte(reader.GetOrdinal("attribute6")),
-                    reader.GetByte(reader.GetOrdinal("attribute7")),
-                    reader.GetByte(reader.GetOrdinal("attribute8")),
-                },
+                mAttributes = attributes,
                 mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE,
                 mCardDbId = cardDbId,
                 mFormationId = reader.GetByte(reader.GetOrdinal("formationid")),
@@ -291,7 +292,7 @@ public static class UltimateDatabase
                 mDiscardPrice = 0,
                 mRareFlag = reader.GetByte(reader.GetOrdinal("rare")),
                 mRating = (byte)rating,
-                mSalaryCap = HutHelper.DetermineSalary(rating),
+                mSalaryCap = HutHelper.DetermineSalary(attributes),
                 mListStats = new List<int>
                 {
                     0,0,0,0,0,0,0,0,0,0
@@ -300,7 +301,7 @@ public static class UltimateDatabase
                 mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
                 mTeamId = (uint)reader.GetInt32(reader.GetOrdinal("teamid")),
                 mListTrainingCards = new List<int>(),
-                mUsesRemaining = (byte)(rating >= 85 ? 30 : 40)
+                mUsesRemaining = (byte)(rating >= 81 ? 25 : 40)
             };
         }
 

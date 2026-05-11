@@ -189,45 +189,12 @@ public static class HutHelper
         await HutManager.IncrementVersionInfo(userId, HutManager.VersionType.General);
     }
 
-    public static short DetermineSalary(int overall)
+    public static short DetermineSalary(List<byte> attributes)
     {
-        const int minOverAll = 62;
-        const int maxOverAll = 99;
-
-        const int baseSalary = 400;
-        const int pricePerPoint = 25;
-        const double highBias = 1.6;
-
-        int ovr = Math.Clamp(overall, minOverAll, maxOverAll);
-        int pointsAboveMin = ovr - minOverAll;
-
-        double salary = baseSalary + (pointsAboveMin * pricePerPoint) + Math.Pow(pointsAboveMin, highBias);
-
-        salary *= 0.1;
-
-        return (short)Math.Round(salary);
+        long sum = attributes[0] + attributes[1] + attributes[2] + attributes[3] + attributes[4];
+        long cubed = sum * sum * sum;
+        short result = (short)Math.Round(cubed / 500000.0);
+        return (short)(result - 5);
     }
-
-    public static byte DetermineTrainingCardsCanApply(int overall)
-    {
-        int minOverAll = 62;
-        int maxOverAll = 82;
-        double maxSlots = 12.0;
-        double minSlots = 2.0;
-
-        int currentOvr = Math.Clamp(overall, minOverAll, maxOverAll);
-
-        double totalOvrRange = maxOverAll - minOverAll;
-        double totalSlotRange = maxSlots - minSlots;
-        double slotsLostPerPoint = totalSlotRange / totalOvrRange;
-
-        double result = maxSlots - (currentOvr - minOverAll) * slotsLostPerPoint;
-
-        return (byte)Math.Round(result);
-    }
-
-    public static List<long> ToLongList(List<CardData> cardDatas)
-    {
-        return cardDatas.Select(card => card.mCardId).ToList();
-    }
+    
 }
