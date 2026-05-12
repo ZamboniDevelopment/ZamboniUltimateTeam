@@ -39,7 +39,7 @@ public struct SquadInfo
     public uint mStarRating;
     
     [TdfMember("SQID")] 
-    public uint mSquadId;
+    public int mSquadId;
     
     [TdfMember("STAD")] 
     public uint mStadiumDbId;

@@ -7,7 +7,7 @@ namespace ZamboniUltimateTeam.Responses;
 public struct SquadListResponse
 {
     [TdfMember("ACTV")] 
-    public uint mActiveSquad;
+    public int mActiveSquad;
     
     [TdfMember("SQDS")] 
     public List<SquadSmall> mSquads;

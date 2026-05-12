@@ -10,7 +10,7 @@ public struct SquadSaveRequest
     public uint mChemistry;
     
     [TdfMember("COPY")] 
-    public byte mCOPY;
+    public byte mCopyCurrent;
     
     [TdfMember("FORM")] 
     public uint mFormation;
@@ -40,7 +40,7 @@ public struct SquadSaveRequest
     public uint mStarRating;
     
     [TdfMember("SQID")] 
-    public uint mSquadId;
+    public int mSquadId;
     
     [TdfMember("UID")] 
     public long mUserId;

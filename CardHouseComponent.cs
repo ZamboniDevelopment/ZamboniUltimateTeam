@@ -103,7 +103,6 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
     public override async Task<NumericResponse> SetGamerInfoRequestAsync(GamerSetInfoRequest request, BlazeRpcContext context)
     {
-        // throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NAME_EXISTS);
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
         var gamerInfo = await HutManager.GetGamerInfo(userId);
         if (gamerInfo == null)
@@ -141,9 +140,9 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 }
             }, userId);
 
-        var squadInfo = await HutManager.GetSquadInfo(userId);
+        var squadInfoList = await HutManager.GetSquadList(userId);
         uint teamRating = 0;
-        if (squadInfo != null) teamRating = squadInfo.Value.mStarRating;
+        if (squadInfoList.Count >= 1) teamRating = squadInfoList[0].mStarRating;
 
         var versionInfo = await HutManager.GetVersionInfo(userId);
         if (versionInfo == null)
@@ -401,23 +400,21 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<SquadListResponse> GetSquadListAsync(NumericRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-        var squadInfo = await HutManager.GetSquadInfo(userId);
-        if (squadInfo == null) return new SquadListResponse();
-
+        var squadInfo = await HutManager.GetSquadList(userId);
+        if (squadInfo.Count <= 0) return new SquadListResponse();
+        var squadSmalls = squadInfo.Select(squadInfoS => new SquadSmall
+            {
+                mChemistry = squadInfoS.mChemistry,
+                mFormation = squadInfoS.mFormationId,
+                mRating = squadInfoS.mStarRating,
+                mSquadId = squadInfoS.mSquadId,
+                mSquadName = squadInfoS.mSquadName
+            })
+            .ToList();
         return new SquadListResponse
         {
-            mActiveSquad = 1,
-            mSquads = new List<SquadSmall>
-            {
-                new SquadSmall
-                {
-                    mChemistry = squadInfo.Value.mChemistry,
-                    mFormation = squadInfo.Value.mFormationId,
-                    mRating = squadInfo.Value.mStarRating,
-                    mSquadId = 0,
-                    mSquadName = squadInfo.Value.mSquadName
-                }
-            }
+            mActiveSquad = squadInfo[0].mSquadId,
+            mSquads = squadSmalls
         };
     }
 
@@ -438,13 +435,31 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<SquadSaveResponse> SquadSaveAsync(SquadSaveRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-        if (request.mCOPY >= 1) throw new NotImplementedException();
-        await HutManager.SetSquadInfo(request, userId);
         return new SquadSaveResponse
         {
-            mSquadId = request.mSquadId
+            mSquadId = await HutManager.SaveSquadInfo(request, userId)
         };
     }
+
+    public override async Task<SquadSaveResponse> SquadRenameAsync(SquadRenameRequest request, BlazeRpcContext context)
+    {
+        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+        var squad = await HutManager.GetSquad(userId, request.mSquadId, false);
+        if (squad == null) throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_UNKNOWN);
+
+        return new SquadSaveResponse
+        {
+            mSquadId = await HutManager.RenameSquad(request.mNewName, userId, request.mSquadId)
+        };
+    }
+    
+    public override async Task<NullStruct> SquadDeleteAsync(SquadDeleteRequest request, BlazeRpcContext context)
+    {
+        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+        await HutManager.HardDeleteSquad(userId, request.mSquadId);
+        return new NullStruct();
+    }
+
 
     public static readonly CardSubType[] PlayerTypes =
     {
@@ -1210,9 +1225,9 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<SquadLoadActiveResponse> SquadLoadActiveAsync(SquadLoadActiveRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-        var squadInfo = await HutManager.GetSquadInfo(userId);
-        if (squadInfo == null) throw new Exception();
-
+        var squadInfoList = await HutManager.GetSquadList(userId);
+        if (squadInfoList.Count <= 0) throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_UNKNOWN);
+        var activeSquad = squadInfoList[0];
         List<CardData> activeCards = new();
         activeCards.AddRange(await HutManager.GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE));
         activeCards.AddRange(await HutManager.GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_AWAY_KIT));
@@ -1222,7 +1237,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         return new SquadLoadActiveResponse
         {
             mActiveCards = activeCards,
-            mSquadInfo = squadInfo.Value,
+            mSquadInfo = activeSquad,
             mTargetUserId = request.mTargetUserId,
         };
     }
@@ -1238,24 +1253,33 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
     public override async Task<SquadLoadResponse> SquadLoadAsync(SquadLoadRequest request, BlazeRpcContext context)
     {
-        var squadInfoPromise = await HutManager.GetSquadInfo(request.mUserId);
-        var squadInfo = squadInfoPromise.Value;
+        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+        var makeActive = true;
+        if (request.mUserId != null && request.mUserId >= 1)
+        {
+            userId = request.mUserId;
+            makeActive = false;
+        }
+
+        var squadPromise = await HutManager.GetSquad(userId, request.mSquadId, makeActive);
+        if (squadPromise == null) throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_UNKNOWN);
+
         return new SquadLoadResponse
         {
-            mChemistry = (int)squadInfo.mChemistry,
-            mCHNG = (int)squadInfo.mCHNG,
-            mFormation = (int)squadInfo.mFormationId,
-            mJerseyAwayDbId = squadInfo.mJerseyAwayDbId,
-            mJerseyHomeDbId = squadInfo.mJerseyHomeDbId,
-            mLines = squadInfo.mLines,
-            mLogoCardDbId = squadInfo.mLogoCardDbId,
-            mManager = squadInfo.mManager,
-            mTeamName = squadInfo.mSquadName,
-            mPlayers = squadInfo.mPlayers,
-            mStarRating = (int)squadInfo.mStarRating,
-            mSquadId = 0,
-            mStadiumDbId = squadInfo.mStadiumDbId,
-            mTeamAbbreviation = squadInfo.mTeamAbbreviation,
+            mChemistry = (int)squadPromise.Value.mChemistry,
+            mCHNG = (int)squadPromise.Value.mCHNG,
+            mFormation = (int)squadPromise.Value.mFormationId,
+            mJerseyAwayDbId = squadPromise.Value.mJerseyAwayDbId,
+            mJerseyHomeDbId = squadPromise.Value.mJerseyHomeDbId,
+            mLines = squadPromise.Value.mLines,
+            mLogoCardDbId = squadPromise.Value.mLogoCardDbId,
+            mManager = squadPromise.Value.mManager,
+            mTeamName = squadPromise.Value.mSquadName,
+            mPlayers = squadPromise.Value.mPlayers,
+            mStarRating = (int)squadPromise.Value.mStarRating,
+            mSquadId = squadPromise.Value.mSquadId,
+            mStadiumDbId = squadPromise.Value.mStadiumDbId,
+            mTeamAbbreviation = squadPromise.Value.mTeamAbbreviation,
             mUserId = request.mUserId,
         };
     }

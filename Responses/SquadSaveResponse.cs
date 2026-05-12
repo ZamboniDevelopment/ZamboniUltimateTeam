@@ -6,6 +6,6 @@ namespace ZamboniUltimateTeam.Responses;
 public struct SquadSaveResponse
 {
     [TdfMember("SQID")] 
-    public uint mSquadId;
+    public int mSquadId;
 
 }

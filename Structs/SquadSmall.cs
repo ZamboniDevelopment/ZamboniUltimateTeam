@@ -15,7 +15,7 @@ public struct SquadSmall
     public uint mRating;
     
     [TdfMember("SQID")] 
-    public uint mSquadId;
+    public int mSquadId;
     
     [TdfMember("SQNM")] 
     public string mSquadName;

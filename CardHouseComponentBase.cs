@@ -42,7 +42,9 @@ public static class CardHouseComponentBase
         squadLoad = 707,
         squadSave = 708,
         getSquadList = 709,
+        squadRename = 710,
         squadLoadActive = 711,
+        squadDelete = 712,
         squadSearch = 713,
         stickerBookStats2 = 800,
         stickerBookSearch = 802,
@@ -98,6 +100,8 @@ public static class CardHouseComponentBase
             CardHouseComponentCommand.squadLoadActive => typeof(SquadLoadActiveRequest),
             CardHouseComponentCommand.squadSearch => typeof(SquadSearchRequest),
             CardHouseComponentCommand.squadLoad => typeof(SquadLoadRequest),
+            CardHouseComponentCommand.squadRename => typeof(SquadRenameRequest),
+            CardHouseComponentCommand.squadDelete => typeof(SquadDeleteRequest),
             CardHouseComponentCommand.stickerBookStats2 => typeof(StickerBookStats2Request),
             CardHouseComponentCommand.stickerBookSearch => typeof(StickerBookSearchRequest),
             CardHouseComponentCommand.activateCard => typeof(ActivateCardRequest),
@@ -152,6 +156,8 @@ public static class CardHouseComponentBase
             CardHouseComponentCommand.squadLoadActive => typeof(SquadLoadActiveResponse),
             CardHouseComponentCommand.squadSearch => typeof(SquadSearchResponse),
             CardHouseComponentCommand.squadLoad => typeof(SquadLoadResponse),
+            CardHouseComponentCommand.squadRename => typeof(SquadSaveResponse),
+            CardHouseComponentCommand.squadDelete => typeof(NullStruct),
             CardHouseComponentCommand.stickerBookStats2 => typeof(StickerBookStats2Response),
             CardHouseComponentCommand.stickerBookSearch => typeof(StickerBookSearchResponse),
             CardHouseComponentCommand.activateCard => typeof(ActivateCardResponse),
@@ -333,6 +339,18 @@ public static class CardHouseComponentBase
 
         [BlazeCommand((ushort)CardHouseComponentCommand.getSquadList)]
         public virtual Task<SquadListResponse> GetSquadListAsync(NumericRequest request, BlazeRpcContext context)
+        {
+            throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
+        }
+        
+        [BlazeCommand((ushort)CardHouseComponentCommand.squadRename)]
+        public virtual Task<SquadSaveResponse> SquadRenameAsync(SquadRenameRequest request, BlazeRpcContext context)
+        {
+            throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
+        }
+        
+        [BlazeCommand((ushort)CardHouseComponentCommand.squadDelete)]
+        public virtual Task<NullStruct> SquadDeleteAsync(SquadDeleteRequest request, BlazeRpcContext context)
         {
             throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
         }
@@ -843,6 +861,26 @@ public static class CardHouseComponentBase
         public Task<SquadLoadResponse> SquadLoadAsync(SquadLoadRequest request)
         {
             return Connection.SendRequestAsync<SquadLoadRequest, SquadLoadResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.squadLoad, request);
+        }
+        
+        public SquadSaveResponse SquadRename(SquadRenameRequest request)
+        {
+            return Connection.SendRequest<SquadRenameRequest, SquadSaveResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.squadRename, request);
+        }
+
+        public Task<SquadSaveResponse> SquadRenameAsync(SquadRenameRequest request)
+        {
+            return Connection.SendRequestAsync<SquadRenameRequest, SquadSaveResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.squadRename, request);
+        }
+        
+        public NullStruct SquadDelete(SquadDeleteRequest request)
+        {
+            return Connection.SendRequest<SquadDeleteRequest, NullStruct, NullStruct>(this, (ushort)CardHouseComponentCommand.squadDelete, request);
+        }
+
+        public Task<NullStruct> SquadDeleteAsync(SquadDeleteRequest request)
+        {
+            return Connection.SendRequestAsync<SquadDeleteRequest, NullStruct, NullStruct>(this, (ushort)CardHouseComponentCommand.squadDelete, request);
         }
 
         public UserReliabilityInfoResponse GetUserReliabilityRequest(NumericRequest request)

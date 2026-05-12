@@ -3,7 +3,7 @@ using Tdf;
 namespace ZamboniUltimateTeam.Requests;
 
 [TdfStruct]
-public struct SquadLoadRequest
+public struct SquadDeleteRequest
 {
     
     [TdfMember("SQID")] 

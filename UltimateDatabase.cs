@@ -35,7 +35,7 @@ public static class UltimateDatabase
         const string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS hut_general_info (
                     user_id BIGINT PRIMARY KEY,
-                    pucks INTEGER DEFAULT 100,
+                    pucks INTEGER DEFAULT 1000,
                     stats INTEGER[] DEFAULT '{}'
                 );";
 
@@ -95,7 +95,8 @@ public static class UltimateDatabase
 
         const string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS hut_squad_info (
-                    user_id BIGINT PRIMARY KEY,
+                    squad_id SERIAL PRIMARY KEY,
+                    user_id BIGINT,
                     chemistry INTEGER,
                     formation_id INTEGER,
                     lines INTEGER[] DEFAULT '{}',
@@ -106,7 +107,7 @@ public static class UltimateDatabase
                     rating_gk INTEGER,
                     rating_off INTEGER,
                     star_rating INTEGER,
-                    squad_id INTEGER
+                    active BOOLEAN
                 );";
 
         using var cmd = new NpgsqlCommand(createTableQuery, conn);
