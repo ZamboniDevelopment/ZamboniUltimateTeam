@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using NLog;
 using Npgsql;
 using ZamboniUltimateTeam.Structs;
@@ -67,8 +68,11 @@ public static class HutHelper
         };
     }
 
+    private static List<int>? _cachedLeagueIds;
     public static async Task<List<int>> GetAllLeagueIds()
     {
+        if (_cachedLeagueIds != null) return _cachedLeagueIds;
+
         var leagueIds = new List<int>();
 
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
@@ -84,12 +88,17 @@ public static class HutHelper
             leagueIds.Add(reader.GetInt32(0));
         }
 
-        return leagueIds;
+        _cachedLeagueIds = leagueIds;
+        return _cachedLeagueIds;
     }
-
+    
+    private static readonly ConcurrentDictionary<string, List<int>> CachedCardDbIds = new();
     public static async Task<List<int>> GetAllDistinctCardDbIds(string tableName)
     {
-        var trainingCardIds = new List<int>();
+        if (CachedCardDbIds.TryGetValue(tableName, out var cached))
+            return cached;
+
+        var cardDbIds = new List<int>();
 
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
@@ -101,10 +110,11 @@ public static class HutHelper
 
         while (await reader.ReadAsync())
         {
-            trainingCardIds.Add(reader.GetInt32(0));
+            cardDbIds.Add(reader.GetInt32(0));
         }
 
-        return trainingCardIds;
+        CachedCardDbIds[tableName] = cardDbIds;
+        return cardDbIds;
     }
 
     public static async Task<ISOfferInfo> ReadOffer(NpgsqlDataReader reader)

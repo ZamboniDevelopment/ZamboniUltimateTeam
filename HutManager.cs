@@ -164,11 +164,10 @@ public static class HutManager
         List<SquadInfo> squadList = new();
 
         const string sql = @"
-            SELECT s.*, g.team_abbreviation 
-            FROM hut_squad_info AS s 
-            INNER JOIN hut_gamer_info AS g ON s.user_id = g.user_id 
-            WHERE s.user_id = @user_id
-            ORDER BY s.active DESC;";
+            SELECT squad_id 
+            FROM hut_squad_info 
+            WHERE user_id = @user_id 
+            ORDER BY active DESC;";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("user_id", userId);
@@ -176,39 +175,8 @@ public static class HutManager
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            List<CardData> playersOrdered = new List<CardData>();
-            foreach (var cardId in reader.GetFieldValue<List<long>>(reader.GetOrdinal("players")))
-            {
-                playersOrdered.Add((await GetCard(cardId, userId)).Card);
-            }
-
-            var logoCardResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE);
-            var homeJerseyResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_HOME_KIT);
-            var awayJerseyResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_AWAY_KIT);
-            var stadiumResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_STADIUM);
-
-            var logoCardDbId = logoCardResult[0].mCardDbId;
-            var homeJerseyDbId = homeJerseyResult[0].mCardDbId;
-            var awayJerseyDbId = awayJerseyResult[0].mCardDbId;
-            var stadiumDbId = stadiumResult[0].mCardDbId;
-
-            squadList.Add(new SquadInfo
-            {
-                mChemistry = (uint)reader.GetInt32(reader.GetOrdinal("chemistry")),
-                mCHNG = 0,
-                mFormationId = (uint)reader.GetInt32(reader.GetOrdinal("formation_id")),
-                mJerseyAwayDbId = awayJerseyDbId,
-                mJerseyHomeDbId = homeJerseyDbId,
-                mLines = reader.GetFieldValue<int[]>(reader.GetOrdinal("lines")).ToList(),
-                mManager = (await GetCard(reader.GetInt64(reader.GetOrdinal("manager")))).Card,
-                mSquadName = reader.GetString(reader.GetOrdinal("squad_name")),
-                mPlayers = playersOrdered,
-                mStarRating = (uint)reader.GetInt32(reader.GetOrdinal("star_rating")),
-                mSquadId = reader.GetInt32(reader.GetOrdinal("squad_id")),
-                mStadiumDbId = stadiumDbId,
-                mTeamAbbreviation = reader.GetString(reader.GetOrdinal("team_abbreviation")),
-                mLogoCardDbId = logoCardDbId
-            });
+            SquadInfo? squadInfo = await GetSquad(userId, reader.GetInt32(reader.GetOrdinal("squad_id")), false);
+            if (squadInfo != null) squadList.Add(squadInfo.Value);
         }
 
         return squadList;
@@ -240,21 +208,28 @@ public static class HutManager
         await using var reader = await cmd.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
-            List<CardData> playersOrdered = new List<CardData>();
-            foreach (var cardId in reader.GetFieldValue<List<long>>(reader.GetOrdinal("players")))
-            {
-                playersOrdered.Add((await GetCard(cardId, userId)).Card);
-            }
+            var playerIds = reader.GetFieldValue<List<long>>(reader.GetOrdinal("players"));
 
-            var logoCardResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE);
-            var homeJerseyResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_HOME_KIT);
-            var awayJerseyResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_AWAY_KIT);
-            var stadiumResult = await GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_STADIUM);
+            var playersOrdered = (await Task.WhenAll(
+                playerIds.Select(cardId => GetCard(cardId, userId))
+            )).Select(result => result.Card).ToList();
 
-            var logoCardDbId = logoCardResult[0].mCardDbId;
-            var homeJerseyDbId = homeJerseyResult[0].mCardDbId;
-            var awayJerseyDbId = awayJerseyResult[0].mCardDbId;
-            var stadiumDbId = stadiumResult[0].mCardDbId;
+            var logoTask = GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE);
+            var homeJerseyTask = GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_HOME_KIT);
+            var awayJerseyTask = GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_AWAY_KIT);
+            var stadiumTask = GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_STADIUM);
+
+            await Task.WhenAll(
+                logoTask, 
+                homeJerseyTask, 
+                awayJerseyTask, 
+                stadiumTask
+            );
+            
+            var logoCardDbId = (await logoTask)[0].mCardDbId;
+            var homeJerseyDbId = (await homeJerseyTask)[0].mCardDbId;
+            var awayJerseyDbId = (await awayJerseyTask)[0].mCardDbId;
+            var stadiumDbId = (await stadiumTask)[0].mCardDbId;
 
             return new SquadInfo()
             {

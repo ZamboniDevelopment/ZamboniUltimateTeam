@@ -358,12 +358,12 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<AssignCardsResponse> AssignCardsAsync(AssignCardsRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-        foreach (var assignCardCard in request.mList)
+        await Task.WhenAll(request.mList.Select(async assignCardCard =>
         {
             var cardData = (await HutManager.GetCard(assignCardCard.mCardId)).Card;
             cardData.mCardStateId = assignCardCard.mCardStateId;
             await HutCardFactory.CreateOrUpdateCard(cardData, userId, assignCardCard.mDeckType);
-        }
+        }));
 
         await HutManager.IncrementVersionInfo(userId, HutManager.VersionType.Unassigned);
         var versionInfo = await HutManager.GetVersionInfo(userId);
@@ -420,11 +420,9 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
     public override async Task<ViewCardsResponse> ViewCardsAsync(ViewCardsRequest request, BlazeRpcContext context)
     {
-        var cardDataList = new List<CardData>();
-        foreach (var cardId in request.mCardIdList)
-        {
-            cardDataList.Add((await HutManager.GetCard(cardId)).Card);
-        }
+        var cardDataList = (await Task.WhenAll(
+            request.mCardIdList.Select(cardId => HutManager.GetCard(cardId))
+        )).Select(result => result.Card).ToList();
 
         return new ViewCardsResponse
         {
@@ -1144,20 +1142,24 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
 
-        foreach (var loopVar in request.mCardDataList)
+        var updateTasks = request.mCardDataList.Select(async loopVar => 
         {
-            CardData cardData = (await HutManager.GetCard(loopVar.mCardId)).Card;
+            var cardResult = await HutManager.GetCard(loopVar.mCardId);
+            CardData cardData = cardResult.Card;
+
             cardData.mUsesRemaining--;
             cardData.mInjuryGames = loopVar.mInjuryGames;
             cardData.mInjuryType = loopVar.mInjuryType;
             cardData.mListStats = loopVar.mListStats;
+
             await HutCardFactory.CreateOrUpdateCard(cardData, userId);
-        }
+        });
+
+        await Task.WhenAll(updateTasks);
 
         return new ChangePlayersResponse();
     }
-
-
+    
     public static CardSubType ToCardSubType(TournamentType type)
     {
         return type switch
