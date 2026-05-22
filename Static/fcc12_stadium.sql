@@ -40,7 +40,8 @@ CREATE TABLE public.fcc12_stadium (
     arenatype integer,
     name character varying,
     category integer,
-    header character varying
+    header character varying,
+    zcat integer
 );
 
 
@@ -50,14 +51,14 @@ ALTER TABLE public.fcc12_stadium OWNER TO postgres;
 -- Data for Name: fcc12_stadium; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.fcc12_stadium (carddbid, capacity, biodescription, weightrare, cardassetid, description, assetid, stadiumid, value, arenatype, name, category, header) FROM stdin;
-6200000	40	StadiumDetailDesc	0	0	StadiumDesc_1	0	0	80	0	EA SPORTS ™ Arena1	4	Stadium
-6200001	70	StadiumDetailDesc	0	0	StadiumDesc_2	1	0	80	0	EA SPORTS ™ Arena2	4	Stadium
-6200002	90	StadiumDetailDesc	10	0	StadiumDesc_3	2	0	80	0	EA SPORTS ™ Arena3	4	Stadium
-6200003	40	StadiumDetailDesc	0	1	StadiumDesc_4	3	0	80	1	EA SPORTS ™ Arena4	4	Stadium
-6200004	70	StadiumDetailDesc	0	1	StadiumDesc_5	4	0	80	1	EA SPORTS ™ Arena5	4	Stadium
-6200005	90	StadiumDetailDesc	10	1	StadiumDesc_6	5	0	80	1	EA SPORTS ™ Arena6	4	Stadium
-6200006	100	StadiumDetailDesc	5	2	StadiumDesc_7	100	0	80	0	EA SPORTS ™ Arena7	4	Stadium
+COPY public.fcc12_stadium (carddbid, capacity, biodescription, weightrare, cardassetid, description, assetid, stadiumid, value, arenatype, name, category, header, zcat) FROM stdin;
+6200000	40	StadiumDetailDesc	0	0	StadiumDesc_1	0	0	80	0	EA SPORTS ™ Arena1	4	Stadium	0
+6200001	70	StadiumDetailDesc	0	0	StadiumDesc_2	1	0	80	0	EA SPORTS ™ Arena2	4	Stadium	1
+6200002	90	StadiumDetailDesc	10	0	StadiumDesc_3	2	0	80	0	EA SPORTS ™ Arena3	4	Stadium	1
+6200003	40	StadiumDetailDesc	0	1	StadiumDesc_4	3	0	80	1	EA SPORTS ™ Arena4	4	Stadium	2
+6200004	70	StadiumDetailDesc	0	1	StadiumDesc_5	4	0	80	1	EA SPORTS ™ Arena5	4	Stadium	3
+6200005	90	StadiumDetailDesc	10	1	StadiumDesc_6	5	0	80	1	EA SPORTS ™ Arena6	4	Stadium	3
+6200006	100	StadiumDetailDesc	5	2	StadiumDesc_7	100	0	80	0	EA SPORTS ™ Arena7	4	Stadium	4
 \.
 
 

@@ -302,11 +302,35 @@ public static class UltimateDatabase
                 mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
                 mTeamId = (uint)reader.GetInt32(reader.GetOrdinal("teamid")),
                 mListTrainingCards = new List<int>(),
-                mUsesRemaining = (byte)(rating >= 81 ? 25 : 40)
+                mUsesRemaining = (byte)Random.Shared.Next(6,13),
             };
         }
 
         return null;
+    }
+    
+    public static async Task<int> TeamIdFromDbId(uint dbId)
+    {
+        await using var conn = new NpgsqlConnection(ConnectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+        SELECT teamid FROM fcc_badges WHERE carddbid = @carddbid
+        UNION ALL
+        SELECT teamid FROM fcc_kitcards WHERE carddbid = @carddbid
+        LIMIT 1;";
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("carddbid", (int)dbId);
+
+        var result = await cmd.ExecuteScalarAsync();
+
+        if (result != null && result != DBNull.Value)
+        {
+            return Convert.ToInt32(result);
+        }
+
+        return 0;
     }
 
     public static async Task<HutTrainingCard> GetTrainingCardByDbIdAsync(uint cardDbId)
@@ -326,7 +350,7 @@ public static class UltimateDatabase
             return new HutTrainingCard
             {
                 CardDbId = (uint)reader.GetInt32(0),
-                CardSubtype = reader.GetInt32(1),
+                CardSubType = reader.GetInt32(1),
                 WeightRare = reader.GetInt32(2),
                 CardAssetId = reader.GetInt32(3),
                 Description = reader.GetString(4),

@@ -1,4 +1,5 @@
 using Blaze3SDK;
+using Blaze3SDK.Blaze.Example;
 using BlazeCommon;
 using ZamboniUltimateTeam.Requests;
 using ZamboniUltimateTeam.Responses;
@@ -282,7 +283,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         {
             mFreePack = 0,
             mPremiumPacksHidden = 0,
-            mPackTypeList = OpenablePack.OpenablePacks.Select(op => op.storePackTypeData).ToList(),
+            mPackTypeList = UltimateTeam.PackConfig.Packs.Select(pack => pack.StorePackTypeData).ToList(),
             mServerTime = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
         };
     }
@@ -1061,21 +1062,6 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             case var subtype when TrainingPlayerTypes.Contains(subtype) || TrainingGoalieTypes.Contains(subtype):
             {
                 var trainingCard = await UltimateDatabase.GetTrainingCardByDbIdAsync(consumable.Card.mCardDbId);
-                //This might not even be necessary for 1.0 clients
-                //Should then also calculate the overall column
-                // if (trainingCard.AttributeSlot == -1)
-                // {
-                //     updated.mAttributes[0] += (byte)trainingCard.Amount;
-                //     updated.mAttributes[1] += (byte)trainingCard.Amount;
-                //     updated.mAttributes[2] += (byte)trainingCard.Amount;
-                //     updated.mAttributes[3] += (byte)trainingCard.Amount;
-                //     updated.mAttributes[4] += (byte)trainingCard.Amount;
-                // }
-                // else
-                // {
-                //     updated.mAttributes[trainingCard.AttributeSlot] += (byte)trainingCard.Amount;
-                // }
-
                 updated.mListTrainingCards.Add(trainingCard.IndexedConsumableId);
                 break;
             }
@@ -1290,15 +1276,15 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
 
-        var openablePack = OpenablePack.OpenablePacks.FirstOrDefault(op => op.packType.Equals(request.mPackType));
-        if (openablePack == null) throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NOT_IMPLEMENTED);
+        var pack = UltimateTeam.PackConfig.Packs.FirstOrDefault(pack => pack.PackId.Equals((int)request.mPackType));
+        if (pack == null) throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NOT_IMPLEMENTED);
 
-        if (!await HutHelper.Withdraw(userId, openablePack.storePackTypeData.mCoinCost))
+        if (!await HutHelper.Withdraw(userId, pack.StorePackTypeData.mCoinCost))
         {
             throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NOT_ENOUGH_CREDITS);
         }
 
-        var cards = await openablePack.GiveCards(userId);
+        var cards = await HutPackFactory.RollPackAsync(pack, userId);
         var duplicates = await HutManager.FindDuplicates(userId, cards);
 
         var versionInfo = await HutManager.GetVersionInfo(userId);
@@ -1341,5 +1327,10 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mEST = 0,
             mVLUE = 10,
         };
+    }
+    
+    public override async Task<NullStruct> StorePlayAFriendGameAsync(StorePlayAFriendGameRequest request, BlazeRpcContext context)
+    {
+        return new NullStruct();
     }
 }

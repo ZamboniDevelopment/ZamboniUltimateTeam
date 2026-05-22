@@ -31,7 +31,8 @@ CREATE TABLE public.fcc_healingcards (
     carddbid integer,
     cardsubtype integer,
     weightrare integer,
-    amount integer
+    amount integer,
+    zcat integer
 );
 
 
@@ -41,19 +42,19 @@ ALTER TABLE public.fcc_healingcards OWNER TO postgres;
 -- Data for Name: fcc_healingcards; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.fcc_healingcards (carddbid, cardsubtype, weightrare, amount) FROM stdin;
-5002001	211	0	1
-5002002	211	0	2
-5002003	211	50	4
-5002004	212	0	1
-5002005	212	0	2
-5002006	212	50	4
-5002007	213	0	1
-5002008	213	0	2
-5002009	213	50	4
-5002012	214	15	4
-5002011	214	75	2
-5002010	214	100	1
+COPY public.fcc_healingcards (carddbid, cardsubtype, weightrare, amount, zcat) FROM stdin;
+5002001	211	0	1	1
+5002002	211	0	2	2
+5002003	211	50	4	3
+5002004	212	0	1	1
+5002005	212	0	2	2
+5002006	212	50	4	3
+5002007	213	0	1	1
+5002008	213	0	2	2
+5002009	213	50	4	3
+5002012	214	15	4	4
+5002011	214	75	2	3
+5002010	214	100	1	2
 \.
 
 

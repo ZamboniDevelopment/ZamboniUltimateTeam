@@ -21,6 +21,7 @@ public static class CardHouseComponentBase
         moveCard = 304,
         playGame = 305,
         assignCards = 307,
+        storePlayAFriendGame = 308,
         getFriendHistory = 309,
         getFriendGameList = 310,
         getPersistenceInfo = 312,
@@ -83,6 +84,7 @@ public static class CardHouseComponentBase
             CardHouseComponentCommand.moveCard => typeof(MoveCardRequest),
             CardHouseComponentCommand.playGame => typeof(PlayGameRequest),
             CardHouseComponentCommand.assignCards => typeof(AssignCardsRequest),
+            CardHouseComponentCommand.storePlayAFriendGame => typeof(StorePlayAFriendGameRequest),
             CardHouseComponentCommand.getFriendHistory => typeof(NumericRequest),
             CardHouseComponentCommand.getFriendGameList => typeof(GetFriendGameListRequest),
             CardHouseComponentCommand.getPersistenceInfo => typeof(NumericRequest),
@@ -139,6 +141,7 @@ public static class CardHouseComponentBase
             CardHouseComponentCommand.moveCard => typeof(MoveCardResponse),
             CardHouseComponentCommand.playGame => typeof(PlayGameResponse),
             CardHouseComponentCommand.assignCards => typeof(AssignCardsResponse),
+            CardHouseComponentCommand.storePlayAFriendGame => typeof(NullStruct),
             CardHouseComponentCommand.getFriendHistory => typeof(GetFriendHistoryResponse),
             CardHouseComponentCommand.getFriendGameList => typeof(GetFriendGameListResponse),
             CardHouseComponentCommand.getPersistenceInfo => typeof(GetPersistenceInfoResponse),
@@ -279,6 +282,12 @@ public static class CardHouseComponentBase
         
         [BlazeCommand((ushort)CardHouseComponentCommand.assignCards)]
         public virtual Task<AssignCardsResponse> AssignCardsAsync(AssignCardsRequest request, BlazeRpcContext context)
+        {
+            throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
+        }
+        
+        [BlazeCommand((ushort)CardHouseComponentCommand.storePlayAFriendGame)]
+        public virtual Task<NullStruct> StorePlayAFriendGameAsync(StorePlayAFriendGameRequest request, BlazeRpcContext context)
         {
             throw new BlazeRpcException(Blaze3RpcError.ERR_COMMAND_NOT_FOUND);
         }
@@ -711,6 +720,16 @@ public static class CardHouseComponentBase
         public Task<AssignCardsResponse> AssignCardsRequestAsync(AssignCardsRequest request)
         {
             return Connection.SendRequestAsync<AssignCardsRequest, AssignCardsResponse, NullStruct>(this, (ushort)CardHouseComponentCommand.assignCards, request);
+        }
+        
+        public NullStruct StorePlayAFriendGameRequest(StorePlayAFriendGameRequest request)
+        {
+            return Connection.SendRequest<StorePlayAFriendGameRequest, NullStruct, NullStruct>(this, (ushort)CardHouseComponentCommand.storePlayAFriendGame, request);
+        }
+
+        public Task<NullStruct> StorePlayAFriendGameRequestAsync(StorePlayAFriendGameRequest request)
+        {
+            return Connection.SendRequestAsync<StorePlayAFriendGameRequest, NullStruct, NullStruct>(this, (ushort)CardHouseComponentCommand.storePlayAFriendGame, request);
         }
 
         public DeckInfoResponse GetDeckInfo(DeckInfoRequest request)

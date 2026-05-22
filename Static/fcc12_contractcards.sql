@@ -30,7 +30,8 @@ SET default_table_access_method = heap;
 CREATE TABLE public.fcc12_contractcards (
     carddbid integer,
     weightrare integer,
-    value integer
+    value integer,
+    zcat integer
 );
 
 
@@ -40,18 +41,18 @@ ALTER TABLE public.fcc12_contractcards OWNER TO postgres;
 -- Data for Name: fcc12_contractcards; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.fcc12_contractcards (carddbid, weightrare, value) FROM stdin;
-5001001	0	6
-5001002	0	7
-5001003	0	8
-5001004	0	9
-5001005	0	10
-5001006	0	12
-5001007	2000	20
-5001008	1000	25
-5001009	800	30
-5001010	40	50
-5001011	20	80
+COPY public.fcc12_contractcards (carddbid, weightrare, value, zcat) FROM stdin;
+5001001	0	6	0
+5001002	0	7	0
+5001003	0	8	0
+5001004	0	9	0
+5001005	0	10	1
+5001006	0	12	1
+5001007	2000	20	2
+5001008	1000	25	2
+5001009	800	30	3
+5001010	40	50	3
+5001011	20	80	4
 \.
 
 

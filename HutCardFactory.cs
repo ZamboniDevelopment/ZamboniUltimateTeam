@@ -6,129 +6,7 @@ namespace ZamboniUltimateTeam;
 
 public static class HutCardFactory
 {
-    public static readonly Random Random = new();
-
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    public static async Task<CardData> CreateRandomHeadCoachCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_headcoachcards");
-        var cardDbId = list[Random.Next(list.Count)];
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH);
-    }
-
-    public static async Task<CardData> CreateRandomContractCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_contractcards");
-        var cardDbId = list[Random.Next(list.Count)];
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER);
-    }
-
-    public static async Task<CardData> CreateRandomTrainingCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_trainingcards");
-        var cardDbId = list[Random.Next(list.Count)];
-        var trainingCard = await UltimateDatabase.GetTrainingCardByDbIdAsync((uint)cardDbId);
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, (CardSubType)trainingCard.CardSubtype);
-    }
     
-    public static async Task<CardData> CreateRandomHealingCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_healingcards");
-        var cardDbId = list[Random.Next(list.Count)];
-        var healingCard = await UltimateDatabase.GetHealingCardByDbIdAsync((uint)cardDbId);
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, (CardSubType)healingCard.CardSubType);
-    }
-
-    public static async Task<CardData> CreateRandomLogoCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_badges");
-        var cardDbId = list[Random.Next(list.Count)];
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE);
-    }
-
-    public static async Task<CardData> CreateRandomStadiumCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_stadium");
-        var cardDbId = list[Random.Next(list.Count)];
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM);
-    }
-
-    public static async Task<CardData> CreateRandomJerseyCard(long owner, bool? isAway = null, bool? isRare = null)
-    {
-        var cardDbIds = await UltimateDatabase.GetKitCards(isAway, isRare);
-        var kit = cardDbIds[Random.Next(cardDbIds.Count)];
-        return await CreateNonPlayerCard(owner, kit.CardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT, (byte)(kit.IsAway ? 1 : 0));
-    }
-    
-    public static async Task<CardData> RollPlayerCard(long owner, List<CardData> alreadyRolled, Range overall, bool guaranteeUnique, params CardSubType[] subTypes)
-    {
-        int[] excludeIds = alreadyRolled.Select(c => (int)c.mCardDbId).ToArray();
-
-        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
-        await conn.OpenAsync();
-
-        var possibilities = new List<uint>();
-
-        string sql = @"
-            SELECT carddbid 
-            FROM fcc_playercards p
-            WHERE preferredposition = ANY(@subTypes) 
-            AND rating >= @overallStart AND rating <= @overallEnd 
-            AND NOT (carddbid = ANY(@excludeIds))
-            AND (@guaranteeUnique = FALSE OR NOT EXISTS (
-                SELECT 1 FROM hut_cards h 
-                WHERE h.user_id = @owner AND h.db_id = p.carddbid AND deck_type != 6
-            ))";
-
-        await using var cmd = new NpgsqlCommand(sql, conn);
-        cmd.Parameters.AddWithValue("subTypes", subTypes.Select(type => (int)type).ToArray());
-        cmd.Parameters.AddWithValue("overallStart", overall.Start.Value);
-        cmd.Parameters.AddWithValue("overallEnd", overall.End.Value);
-        cmd.Parameters.AddWithValue("excludeIds", excludeIds);
-        cmd.Parameters.AddWithValue("owner", owner);
-        cmd.Parameters.AddWithValue("guaranteeUnique", guaranteeUnique);
-
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            possibilities.Add((uint)reader.GetInt32(0));
-        }
-
-        if (possibilities.Count == 0)
-        {
-            if (overall.End.Value <= 1) return await RollPlayerCard(owner, alreadyRolled, new Range(0, 100), false, subTypes);
-
-            return await RollPlayerCard(owner, alreadyRolled, new Range(overall.Start.Value - 1, overall.End.Value - 1), guaranteeUnique, subTypes);
-        }
-
-        return await CreatePlayerCard(owner, possibilities[Random.Next(possibilities.Count)]);
-    }
-
-    public static async Task<int> TeamIdFromDbId(uint dbId)
-    {
-        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
-        await conn.OpenAsync();
-
-        const string sql = @"
-        SELECT teamid FROM fcc_badges WHERE carddbid = @carddbid
-        UNION ALL
-        SELECT teamid FROM fcc_kitcards WHERE carddbid = @carddbid
-        LIMIT 1;";
-
-        await using var cmd = new NpgsqlCommand(sql, conn);
-        cmd.Parameters.AddWithValue("carddbid", (int)dbId);
-
-        var result = await cmd.ExecuteScalarAsync();
-
-        if (result != null && result != DBNull.Value)
-        {
-            return Convert.ToInt32(result);
-        }
-
-        return 0;
-    }
-
     public static async Task<CardData> CreateNonPlayerCard(long owner, uint dbId, CardSubType cardSubType, byte formationId = 0)
     {
         CardState cardState = CardState.CARDHOUSE_CARDSTATE_FREE;
@@ -159,7 +37,7 @@ public static class HutCardFactory
             mListStats = new List<int>(),
             mCardSubTypeId = cardSubType,
             mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
-            mTeamId = (uint)await TeamIdFromDbId(dbId),
+            mTeamId = (uint)await UltimateDatabase.TeamIdFromDbId(dbId),
             mListTrainingCards = new List<int>(),
             mUsesRemaining = 0
         };
