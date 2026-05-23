@@ -32,8 +32,11 @@ namespace ZamboniUltimateTeam.Packs
     public class Filters
     {
         public Range? Rating { get; set; }
+        public Range? ZRating { get; set; }
         public Range? Zcat { get; set; }
         public int? Rare { get; set; }
+        public int? ZVictory { get; set; }
+        public int? ZLegendary { get; set; }
         public bool? IsAway { get; set; }
         public bool? Alternative { get; set; }
         public int? PreferredPosition { get; set; }

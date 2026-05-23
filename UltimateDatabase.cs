@@ -23,7 +23,7 @@ public static class UltimateDatabase
         CreateHutCardsTable();
 
         CreateHutTournamentsTable();
-        
+
         CreateHutNameReservationsTable();
     }
 
@@ -171,7 +171,7 @@ public static class UltimateDatabase
         using var cmd = new NpgsqlCommand(createTableQuery, conn);
         cmd.ExecuteNonQuery();
     }
-        
+
     private static void CreateHutNameReservationsTable()
     {
         using var conn = new NpgsqlConnection(ConnectionString);
@@ -296,19 +296,19 @@ public static class UltimateDatabase
                 mSalaryCap = HutHelper.DetermineSalary(attributes),
                 mListStats = new List<int>
                 {
-                    0,0,0,0,0,0,0,0,0,0
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
                 },
                 mCardSubTypeId = (CardSubType)reader.GetInt16(reader.GetOrdinal("fieldpos")),
                 mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
                 mTeamId = (uint)reader.GetInt32(reader.GetOrdinal("teamid")),
                 mListTrainingCards = new List<int>(),
-                mUsesRemaining = (byte)Random.Shared.Next(6,13),
+                mUsesRemaining = (byte)Random.Shared.Next(6, 13),
             };
         }
 
         return null;
     }
-    
+
     public static async Task<int> TeamIdFromDbId(uint dbId)
     {
         await using var conn = new NpgsqlConnection(ConnectionString);
@@ -388,7 +388,7 @@ public static class UltimateDatabase
 
         throw new Exception();
     }
-    
+
     public static async Task<HealingCard> GetHealingCardByDbIdAsync(uint cardDbId)
     {
         const string sql = "SELECT * FROM fcc_healingcards WHERE carddbid = @cardDbId";
@@ -409,6 +409,32 @@ public static class UltimateDatabase
                 CardSubType = reader.GetInt32(1),
                 WeightRare = reader.GetInt32(2),
                 Amount = reader.GetInt32(3)
+            };
+        }
+
+        throw new Exception();
+    }
+    
+    public static async Task<HutKitCard> GetKitCardByDbIdAsync(uint cardDbId)
+    {
+        const string sql = "SELECT * FROM fcc_kitcards WHERE carddbid = @cardDbId";
+
+        await using var conn = new NpgsqlConnection(ConnectionString);
+        await conn.OpenAsync();
+
+        await using var command = new NpgsqlCommand(sql, conn);
+        command.Parameters.AddWithValue("cardDbId", (int)cardDbId);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if (await reader.ReadAsync())
+        {
+            return new HutKitCard
+            {
+                CardDbId = (uint)reader.GetInt32(0),
+                Alternative = reader.GetBoolean(1),
+                TeamId = (uint)reader.GetInt32(2),
+                IsAway = reader.GetBoolean(3),
             };
         }
 
@@ -443,11 +469,40 @@ public static class UltimateDatabase
             {
                 CardDbId = (uint)reader.GetInt64(0),
                 Alternative = reader.GetBoolean(1),
-                TeamId = reader.GetInt32(2),
+                TeamId = (uint)reader.GetInt32(2),
                 IsAway = reader.GetBoolean(3),
             });
         }
 
         return returningList;
+    }
+
+    public static async Task AwardAll(long userId)
+    {
+        await using var conn = new NpgsqlConnection(ConnectionString);
+        await conn.OpenAsync();
+
+        var sql = new StringBuilder(@"
+            SELECT carddbid
+            FROM fcc_playercards
+            WHERE 1=1");
+
+        await using var command = new NpgsqlCommand(sql.ToString(), conn);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+
+        while (await reader.ReadAsync())
+        {
+            var existing = await HutManager.GetCard((uint)reader.GetInt32(0), userId);
+            if (existing.Card.mCardId != 0)
+            {
+                await HutCardFactory.CreateOrUpdateCard(existing.Card, userId, DeckType.CARDHOUSE_DECK_STICKERBOOK);
+            }
+            else
+            {
+                await HutCardFactory.CreatePlayerCard(userId, (uint)reader.GetInt32(0));
+            }
+        }
     }
 }

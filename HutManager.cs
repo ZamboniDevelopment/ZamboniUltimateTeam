@@ -220,12 +220,12 @@ public static class HutManager
             var stadiumTask = GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_STADIUM);
 
             await Task.WhenAll(
-                logoTask, 
-                homeJerseyTask, 
-                awayJerseyTask, 
+                logoTask,
+                homeJerseyTask,
+                awayJerseyTask,
                 stadiumTask
             );
-            
+
             var logoCardDbId = (await logoTask)[0].mCardDbId;
             var homeJerseyDbId = (await homeJerseyTask)[0].mCardDbId;
             var awayJerseyDbId = (await awayJerseyTask)[0].mCardDbId;
@@ -562,9 +562,9 @@ public static class HutManager
         await conn.OpenAsync();
 
         var sql = new StringBuilder(@"
-            SELECT *, deck_type 
+            SELECT * 
             FROM hut_cards
-            WHERE card_id = @card_id");
+            WHERE db_id = @db_id");
 
         if (userId != 0) sql.Append(" AND user_id = @user_id");
 
@@ -842,6 +842,14 @@ public static class HutManager
             default: throw new NotImplementedException();
         }
 
+        // if (request.mCardState != null)
+        // {
+        //     switch (request.mCardState)
+        //     {
+        //         case CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE: sql.Append(" AND state_id = ANY(@activeStates)"); break;
+        //     }
+        // }
+        
         if (request.mLeagueId >= 0) sql.Append(" AND l.leagueid = @league_id");
         if (request.mTeamId >= 0) sql.Append(" AND h.team_id = @team_id");
 
@@ -858,7 +866,8 @@ public static class HutManager
         if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT) cmd.Parameters.AddWithValue("consumableTypes", CardHouseComponent.ConsumablesTypes.Select(x => (int)x).ToArray());
         if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER) cmd.Parameters.AddWithValue("playerTypes", CardHouseComponent.PlayerTypes.Select(x => (int)x).ToArray());
         if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL) cmd.Parameters.AddWithValue("fieldPlayerTypes", CardHouseComponent.FieldPlayerTypes.Select(x => (int)x).ToArray());
-
+        // if (request.mCardState != null && request.mCardState == CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE) cmd.Parameters.AddWithValue("activeStates", CardHouseComponent.ActiveStates.Select(x => (int)x).ToArray());
+        
         await using var reader = await cmd.ExecuteReaderAsync();
 
         List<CardData> cardDataList = new List<CardData>();

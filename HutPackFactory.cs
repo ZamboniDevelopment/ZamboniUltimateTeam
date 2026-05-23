@@ -13,7 +13,7 @@ namespace ZamboniUltimateTeam
         {
             { "Badge", ("fcc_badges", CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE) },
             { "Contract", ("fcc_contractcards", CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER) },
-            { "Kit", ("fcc_kitcards", CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT) },
+            { "Kit", ("fcc_kitcards", null) },
             { "Player", ("fcc_playercards", null) },
             { "Stadium", ("fcc_stadium", CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM) },
             { "Training", ("fcc_trainingcards", null) },
@@ -42,8 +42,7 @@ namespace ZamboniUltimateTeam
                     do
                     {
                         item = PickWeightedItem(randomizedCategory);
-                    }
-                    while (pack.Loot.Limits.TryGetValue(item.CardType, out int limit) && categoryCounts.GetValueOrDefault(item.CardType) >= limit);
+                    } while (pack.Loot.Limits.TryGetValue(item.CardType, out int limit) && categoryCounts.GetValueOrDefault(item.CardType) >= limit);
 
                     var result = await RollCard(userId, item.CardType, item.Filters, results);
                     categoryCounts[item.CardType] = categoryCounts.GetValueOrDefault(item.CardType) + 1;
@@ -54,7 +53,7 @@ namespace ZamboniUltimateTeam
             results.Sort((_, _) => Random.Shared.Next(-1, 2));
             return results;
         }
-        
+
         private static CardSpec PickWeightedItem(RandomizedCategory pool)
         {
             float roll = (float)(Random.Shared.NextDouble() * pool.Weights.Values.Sum());
@@ -84,8 +83,7 @@ namespace ZamboniUltimateTeam
                 var result = await cmd.ExecuteScalarAsync();
                 if (result is null) throw new Exception("Roll returned 0 available matches");
                 dbId = Convert.ToUInt32(result);
-            }
-            while (!CanHaveDuplicatesInSamePack(cardType) && alreadyRolled.Any(card => card.mCardDbId == dbId));
+            } while (!CanHaveDuplicatesInSamePack(cardType) && alreadyRolled.Any(card => card.mCardDbId == dbId));
 
             if (cardType.Equals("Player"))
             {
@@ -110,9 +108,15 @@ namespace ZamboniUltimateTeam
                 return await HutCardFactory.CreateNonPlayerCard(userId, dbId, (CardSubType)trainingCard.CardSubType);
             }
 
+            if (cardType.Equals("Kit"))
+            {
+                var kitCard = await UltimateDatabase.GetKitCardByDbIdAsync(dbId);
+                return await HutCardFactory.CreateNonPlayerCard(userId, dbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT, (byte)(kitCard.IsAway ? 1 : 0));
+            }
+
             throw new Exception();
         }
-        
+
         private static bool CanHaveDuplicatesInSamePack(string cardType)
         {
             return cardType.Equals("Contract") || cardType.Equals("Healing") || cardType.Equals("Training");
@@ -125,8 +129,11 @@ namespace ZamboniUltimateTeam
             if (filters != null)
             {
                 if (filters.Rating != null) clauses.Add($"rating >= {filters.Rating.RangeStart} AND rating <= {filters.Rating.RangeEnd}");
+                if (filters.ZRating != null) clauses.Add($"zrating >= {filters.ZRating.RangeStart} AND rating <= {filters.ZRating.RangeEnd}");
                 if (filters.Zcat != null) clauses.Add($"zcat >= {filters.Zcat.RangeStart} AND zcat <= {filters.Zcat.RangeEnd}");
                 if (filters.Rare.HasValue) clauses.Add($"rare = {filters.Rare.Value}");
+                if (filters.ZVictory.HasValue) clauses.Add($"zvictory = {filters.ZVictory.Value}");
+                if (filters.ZLegendary.HasValue) clauses.Add($"zlegendary = {filters.ZLegendary.Value}");
                 if (filters.IsAway.HasValue) clauses.Add($"isaway = {filters.IsAway.Value}");
                 if (filters.Alternative.HasValue) clauses.Add($"alternative = {filters.Alternative.Value}");
                 if (filters.PreferredPosition.HasValue) clauses.Add($"preferredposition = {filters.PreferredPosition.Value}");
@@ -134,7 +141,7 @@ namespace ZamboniUltimateTeam
 
             var where = clauses.Count > 0 ? "WHERE " + string.Join(" AND ", clauses) : "";
             var query = $"SELECT carddbid FROM {table} {where} ORDER BY RANDOM() LIMIT 1";
-            Logger.Debug("RollQuery "+ query);
+            Logger.Debug("RollQuery " + query);
             return query;
         }
     }

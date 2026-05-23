@@ -39,7 +39,7 @@ public static class HutCardFactory
             mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
             mTeamId = (uint)await UltimateDatabase.TeamIdFromDbId(dbId),
             mListTrainingCards = new List<int>(),
-            mUsesRemaining = 0
+            mUsesRemaining = (byte)(CardHouseComponent.TrophyTypes.Contains(cardSubType) ? 1 : 0)
         };
         return await CreateOrUpdateCard(cardData, owner, deckType);
     }
