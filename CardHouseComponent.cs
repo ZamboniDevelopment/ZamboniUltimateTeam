@@ -131,13 +131,19 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mCredits = 1000,
                 mStats = new List<int>()
                 {
-                    //Todo figure if other placeholders have meaning
-                    1, 2, 3, 4, 5, 6, 7, 8,
-                    0, //WINS
-                    0, //LOSES
-                    0, //OTL
-                    12, 13, 14, 15, 16, 17, 18, 19, 20,
-                    21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+                    0, //CARDHOUSE_GIS_BRONZE_PACK_BOUGHT
+                    0, //CARDHOUSE_GIS_SILVER_PACK_BOUGHT
+                    0, //CARDHOUSE_GIS_GOLD_PACK_BOUGHT
+                    0, //CARDHOUSE_GIS_GAMES_PLAYED
+                    0, //CARDHOUSE_GIS_CUPS_WON
+                    0, //CARDHOUSE_GIS_RESERVED_X
+                    0, //CARDHOUSE_GIS_RESERVED_Y
+                    (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, //CARDHOUSE_GIS_EST_DATE
+                    0, //CARDHOUSE_GIS_GAMES_WON
+                    0, //CARDHOUSE_GIS_GAMES_LOST
+                    0, //CARDHOUSE_GIS_GAMES_DRAW
+                    0, //CARDHOUSE_GIS_PLAYER_CARDS
+                    0, //CARDHOUSE_GIS_NUM_STATS
                 }
             }, userId);
 
@@ -451,7 +457,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mSquadId = await HutManager.RenameSquad(request.mNewName, userId, request.mSquadId)
         };
     }
-    
+
     public override async Task<NullStruct> SquadDeleteAsync(SquadDeleteRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
@@ -532,7 +538,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT,
         CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE,
     };
-    
+
     public static readonly CardState[] ActiveStates =
     {
         CardState.CARDHOUSE_CARDSTATE_ACTIVE_AWAY_KIT,
@@ -729,6 +735,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                     mValue = teamJerseyCounts[teamId]
                 });
             }
+
             var teamLogoCounts = await HutManager.GetTeamCardCountsAsync(userId, leagueId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE);
             foreach (var teamId in teamLogoCounts.Keys)
             {
@@ -1146,7 +1153,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
 
-        var updateTasks = request.mCardDataList.Select(async loopVar => 
+        var updateTasks = request.mCardDataList.Select(async loopVar =>
         {
             var cardResult = await HutManager.GetCard(loopVar.mCardId);
             CardData cardData = cardResult.Card;
@@ -1163,7 +1170,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
         return new ChangePlayersResponse();
     }
-    
+
     public static CardSubType ToCardSubType(TournamentType type)
     {
         return type switch
@@ -1346,7 +1353,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mVLUE = 10,
         };
     }
-    
+
     public override async Task<NullStruct> StorePlayAFriendGameAsync(StorePlayAFriendGameRequest request, BlazeRpcContext context)
     {
         return new NullStruct();
