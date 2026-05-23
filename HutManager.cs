@@ -842,13 +842,13 @@ public static class HutManager
             default: throw new NotImplementedException();
         }
 
-        // if (request.mCardState != null)
-        // {
-        //     switch (request.mCardState)
-        //     {
-        //         case CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE: sql.Append(" AND state_id = ANY(@activeStates)"); break;
-        //     }
-        // }
+        if (request.mCardState != null)
+        {
+            switch (request.mCardState)
+            {
+                case CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE: sql.Append(" AND state_id = ANY(@activeStates)"); break;
+            }
+        }
         
         if (request.mLeagueId >= 0) sql.Append(" AND l.leagueid = @league_id");
         if (request.mTeamId >= 0) sql.Append(" AND h.team_id = @team_id");
@@ -866,7 +866,7 @@ public static class HutManager
         if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT) cmd.Parameters.AddWithValue("consumableTypes", CardHouseComponent.ConsumablesTypes.Select(x => (int)x).ToArray());
         if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER) cmd.Parameters.AddWithValue("playerTypes", CardHouseComponent.PlayerTypes.Select(x => (int)x).ToArray());
         if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL) cmd.Parameters.AddWithValue("fieldPlayerTypes", CardHouseComponent.FieldPlayerTypes.Select(x => (int)x).ToArray());
-        // if (request.mCardState != null && request.mCardState == CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE) cmd.Parameters.AddWithValue("activeStates", CardHouseComponent.ActiveStates.Select(x => (int)x).ToArray());
+        if (request.mCardState != null && request.mCardState == CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE) cmd.Parameters.AddWithValue("activeStates", CardHouseComponent.ActiveStates.Select(x => (int)x).ToArray());
         
         await using var reader = await cmd.ExecuteReaderAsync();
 
