@@ -129,7 +129,7 @@ namespace ZamboniUltimateTeam
             if (filters != null)
             {
                 if (filters.Rating != null) clauses.Add($"rating >= {filters.Rating.RangeStart} AND rating <= {filters.Rating.RangeEnd}");
-                if (filters.ZRating != null) clauses.Add($"zrating >= {filters.ZRating.RangeStart} AND rating <= {filters.ZRating.RangeEnd}");
+                if (filters.ZRating != null) clauses.Add($"zrating >= {filters.ZRating.RangeStart} AND zrating <= {filters.ZRating.RangeEnd}");
                 if (filters.Zcat != null) clauses.Add($"zcat >= {filters.Zcat.RangeStart} AND zcat <= {filters.Zcat.RangeEnd}");
                 if (filters.Rare.HasValue) clauses.Add($"rare = {filters.Rare.Value}");
                 if (filters.ZVictory.HasValue) clauses.Add($"zvictory = {filters.ZVictory.Value}");
