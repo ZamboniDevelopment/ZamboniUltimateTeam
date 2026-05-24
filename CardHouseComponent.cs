@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Blaze3SDK;
 using Blaze3SDK.Blaze.Example;
 using BlazeCommon;
@@ -1158,7 +1159,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             var cardResult = await HutManager.GetCard(loopVar.mCardId);
             CardData cardData = cardResult.Card;
 
-            cardData.mUsesRemaining--;
+            if (_cardsToDecrementContract[userId].Contains(loopVar.mCardId)) cardData.mUsesRemaining--;
             cardData.mInjuryGames = loopVar.mInjuryGames;
             cardData.mInjuryType = loopVar.mInjuryType;
             cardData.mListStats = loopVar.mListStats;
@@ -1167,7 +1168,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         });
 
         await Task.WhenAll(updateTasks);
-
+        _cardsToDecrementContract.TryRemove(userId, out _);
         return new ChangePlayersResponse();
     }
 
@@ -1184,6 +1185,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         };
     }
 
+    private ConcurrentDictionary<long, List<long>> _cardsToDecrementContract = new();
     public override async Task<PlayGameResponse> PlayGameAsync(PlayGameRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
@@ -1218,6 +1220,11 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                     await HutCardFactory.CreateOrUpdateCard(updated, userId, card.DeckType);
                 }
             }
+        }
+
+        if (request.mState == PlayGameState.CARDHOUSE_PGSTATE_STARTING)
+        {
+            _cardsToDecrementContract[userId] = request.mGameCards;
         }
 
         var generalInfo = await HutManager.GetGeneralInfo(userId);
