@@ -492,12 +492,19 @@ Packs:
                   RangeEnd: 2
         - Count: 2
           Weights:
-            Training: 55
+            Training: 50
+            Training4: 5
             TrainingPos: 15
             Healing: 10
             Contract: 20
           Items:
             - Category: Training
+              CardType: Training
+              Filters:
+                Zcat:
+                  RangeStart: 0
+                  RangeEnd: 2
+            - Category: Training4
               CardType: Training
               Filters:
                 Zcat:
