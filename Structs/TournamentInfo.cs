@@ -6,7 +6,7 @@ namespace ZamboniUltimateTeam.Structs;
 public struct TournamentInfo
 {
     [TdfMember("AIGR")] 
-    public int mAiGroup;
+    public AiGroup mAiGroup;
 
     [TdfMember("BTID")] 
     public int mBlazeTournamentId;
@@ -24,7 +24,7 @@ public struct TournamentInfo
     public ElgType mElg2Type;
     
     [TdfMember("EL2D")] 
-    public int mElg12Data;
+    public int mElg2Data;
     
     [TdfMember("END")] 
     public uint mEndTime;

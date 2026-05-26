@@ -1,4 +1,4 @@
-using ZamboniUltimateTeam.Packs;
+using ZamboniUltimateTeam.Config;
 
 namespace ZamboniUltimateTeam;
 
@@ -6,27 +6,40 @@ public static class UltimateTeam
 {
     public static IServerProvider Server;
     public static PackConfig PackConfig { get; private set; }
+    public static TournamentConfig TournamentConfig { get; private set; }
+    public static HutConfig HutConfig { get; private set; }
     private static string _packConfigPath;
+    private static string _tournamentConfigPath;
+    private static string _hutConfigConfigPath;
+
     
-    public static void Initialize(string connectionString, IServerProvider provider, string packConfigPath)
+    public static void Initialize(string connectionString, IServerProvider provider)
     {
         UltimateDatabase.ConnectionString = connectionString;
         UltimateDatabase.CreateTables();
         Server = provider;
         
-        _packConfigPath = packConfigPath;
-        ReloadPackConfig();
+        _packConfigPath = "packs.yml";
+        _tournamentConfigPath = "tournaments.yml";
+        _hutConfigConfigPath = "hut-config.yml";
+        ReloadConfigs();
     }
     
-    public static void ReloadPackConfig()
+    public static void ReloadConfigs()
     {
-        if (!File.Exists(_packConfigPath))
-        {
-            PackConfig = new PackConfig();
-            PackConfigSerializer.SerializeToFile(PackConfig, _packConfigPath);
-            return;
-        }
+        PackConfig = LoadOrCreate(_packConfigPath, ConfigSerializer.DeserializeFile<PackConfig>, ConfigSerializer.SerializeToFile);
+        TournamentConfig = LoadOrCreate(_tournamentConfigPath, ConfigSerializer.DeserializeFile<TournamentConfig>, ConfigSerializer.SerializeToFile);
+        HutConfig = LoadOrCreate(_hutConfigConfigPath, ConfigSerializer.DeserializeFile<HutConfig>, ConfigSerializer.SerializeToFile);
+    }
     
-        PackConfig = PackConfigSerializer.DeserializeFile(_packConfigPath);
+    private static T LoadOrCreate<T>(string path, Func<string, T> deserialize, Action<T, string> serialize) where T : new()
+    {
+        if (!File.Exists(path))
+        {
+            var config = new T();
+            serialize(config, path);
+            return config;
+        }
+        return deserialize(path);
     }
 }

@@ -1,6 +1,6 @@
 using NLog;
 using Npgsql;
-using ZamboniUltimateTeam.Packs;
+using ZamboniUltimateTeam.Config;
 using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam

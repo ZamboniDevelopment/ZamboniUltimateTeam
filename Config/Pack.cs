@@ -1,7 +1,7 @@
-using ZamboniUltimateTeam.Structs;
 using YamlDotNet.Serialization;
+using ZamboniUltimateTeam.Structs;
 
-namespace ZamboniUltimateTeam.Packs
+namespace ZamboniUltimateTeam.Config
 {
     public class Pack
     {

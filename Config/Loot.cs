@@ -1,4 +1,4 @@
-namespace ZamboniUltimateTeam.Packs
+namespace ZamboniUltimateTeam.Config
 {
     public class Loot
     {
