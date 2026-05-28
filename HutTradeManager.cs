@@ -65,11 +65,13 @@ public static class HutTradeManager
             }
         }
 
-        if (request.mLevel >= 0 || request.mSpecialPlayerTypeParameter >= 0 || request.mIncludeRetired >= 0)
+        switch (request.mSpecialPlayerTypeParameter)
         {
-            //For now dont filter these
+            case SpecialPlayerTypeParameter.STARS_OF_THE_WEEK_PLAYER: sql.Append(" AND sub_type = -1"); break; //Not implemented because this is a little ambiguous currently
+            case SpecialPlayerTypeParameter.LEGENDS_PLAYER:  sql.Append(" AND db_id > 100000000"); break;
         }
-
+        
+        if (request.mIncludeRetired == 0) sql.Append(" AND (c.career_remaining - c.list_stats[1]) > 0");
         if (request.mLeagueId >= 0) sql.Append(" AND l.leagueid = @league_id");
         if (request.mPosition >= 0) sql.Append(" AND c.sub_type = " + request.mPosition);
         if (request.mTeamId >= 0) sql.Append(" AND c.team_id = " + request.mTeamId);
@@ -83,6 +85,7 @@ public static class HutTradeManager
         if (request.mMinBuyPrice > 0) sql.Append(" AND t.buy_out_price >= @minBuy");
         if (request.mMaxBuyPrice > 0) sql.Append(" AND t.buy_out_price <= @maxBuy AND t.buy_out_price > 0");
         
+        sql.Append(" ORDER BY expire_time ASC");
         if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
         if (request.mStart > 0) sql.Append(" OFFSET " + request.mStart);
 

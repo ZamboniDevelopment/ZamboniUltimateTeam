@@ -211,7 +211,7 @@ public static class HutManager
             var playerIds = reader.GetFieldValue<List<long>>(reader.GetOrdinal("players"));
 
             var playersOrdered = (await Task.WhenAll(
-                playerIds.Select(cardId => GetCard(cardId, userId))
+                playerIds.Select(cardId => GetCard(cardId, userId, DeckType.CARDHOUSE_DECK_STICKERBOOK))
             )).Select(result => result.Card).ToList();
 
             var logoTask = GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE);
@@ -527,7 +527,7 @@ public static class HutManager
         return games;
     }
 
-    public static async Task<(CardData Card, DeckType DeckType)> GetCard(long cardId, long userId = 0)
+    public static async Task<(CardData Card, DeckType DeckType)> GetCard(long cardId, long userId = 0, DeckType? searchDeckType = null)
     {
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
@@ -538,10 +538,12 @@ public static class HutManager
         WHERE card_id = @card_id");
 
         if (userId != 0) sql.Append(" AND user_id = @user_id");
-
+        if (searchDeckType.HasValue) sql.Append(" AND deck_type = @search_deck_type");
+        
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("card_id", cardId);
         if (userId != 0) cmd.Parameters.AddWithValue("user_id", userId);
+        if (searchDeckType.HasValue) cmd.Parameters.AddWithValue("search_deck_type", (int)searchDeckType);
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -553,7 +555,7 @@ public static class HutManager
             return (card, deckType);
         }
 
-        return (new CardData(), DeckType.CARDHOUSE_DECK_GENERAL);
+        return (new CardData(), DeckType.CARDHOUSE_DECK_INVALID);
     }
 
     public static async Task<(CardData Card, DeckType DeckType)> GetCard(uint cardDbId, long userId = 0)

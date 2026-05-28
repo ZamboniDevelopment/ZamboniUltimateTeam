@@ -1,8 +1,6 @@
 using System.Collections.Concurrent;
 using Blaze3SDK;
-using Blaze3SDK.Blaze.Example;
 using BlazeCommon;
-using ZamboniUltimateTeam.Config;
 using ZamboniUltimateTeam.Requests;
 using ZamboniUltimateTeam.Responses;
 using ZamboniUltimateTeam.Structs;
@@ -982,6 +980,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 var destinationPositionId = trainingCardMovePosition.IndexedConsumableId;
                 updated.mPreferredPositionId = (byte)destinationPositionId;
                 updated.mFormationId = (byte)destinationPositionId;
+                updated.mCardSubTypeId = (CardSubType)destinationPositionId;
                 break;
             default: throw new NotImplementedException();
         }
@@ -1002,7 +1001,6 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
     public override async Task<ApplySalaryCapResponse> ApplySalaryCapAsync(ApplySalaryCapRequest request, BlazeRpcContext context)
     {
-        throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_UNKNOWN);
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
         var target = await HutManager.GetCard(request.mPlayerCardId, userId);
 
