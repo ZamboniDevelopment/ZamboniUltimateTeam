@@ -406,7 +406,7 @@ public static class HutManager
         return cardDataList;
     }
 
-    public static async Task<List<FriendHistoryEntry>> QueryTeamStats()
+    public static async Task<List<FriendHistoryEntry>> QueryTeamStats(int limit)
     {
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
@@ -418,12 +418,16 @@ public static class HutManager
                 ON g.user_id = n.user_id 
                 AND n.deleted_at IS NULL
             ORDER BY g.stats[9] DESC
+            LIMIT @limit
             ;";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("limit", limit);
+
         await using var reader = await cmd.ExecuteReaderAsync();
 
         List<FriendHistoryEntry> retList = new List<FriendHistoryEntry>();
+        string format = "D" + limit.ToString().Length;
 
         int statsOrdinal = reader.GetOrdinal("stats");
         int userIdOrdinal = reader.GetOrdinal("user_id");
@@ -441,7 +445,7 @@ public static class HutManager
             {
                 mLosses = (short)stats[9],
                 mOpponentId = (uint)reader.GetInt64(userIdOrdinal),
-                mOpponentName = $"{position:D2}. {rawName}",
+                mOpponentName = $"{position.ToString(format)}. {rawName}",
                 mOverTimeLosses = (short)stats[10],
                 mWins = (short)stats[8]
             });

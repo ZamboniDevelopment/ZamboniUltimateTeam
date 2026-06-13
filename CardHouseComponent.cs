@@ -1227,7 +1227,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         return new GetFriendHistoryResponse
         {
-            mHistoryList = await HutManager.QueryTeamStats()
+            mHistoryList = await HutManager.QueryTeamStats(UltimateTeam.HutConfig.Values[0])
         };
     }
 
