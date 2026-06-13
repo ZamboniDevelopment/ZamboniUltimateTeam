@@ -126,9 +126,12 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
         var generalInfo = await HutManager.GetGeneralInfo(userId);
         if (generalInfo == null)
+        {
+            int credits = 0;
+            if (await HutManager.IsFirstTeam(userId)) credits = 1000;
             generalInfo = await HutManager.SetGeneralInfo(new GeneralInfo
             {
-                mCredits = 1000,
+                mCredits = credits,
                 mStats = new List<int>()
                 {
                     0, //CARDHOUSE_GIS_BRONZE_PACK_BOUGHT
@@ -138,7 +141,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                     0, //CARDHOUSE_GIS_CUPS_WON
                     0, //CARDHOUSE_GIS_RESERVED_X
                     0, //CARDHOUSE_GIS_RESERVED_Y
-                    (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, //CARDHOUSE_GIS_EST_DATE
+                    (int)UltimateTeam.TimeNowSeconds(), //CARDHOUSE_GIS_EST_DATE
                     0, //CARDHOUSE_GIS_GAMES_WON
                     0, //CARDHOUSE_GIS_GAMES_LOST
                     0, //CARDHOUSE_GIS_GAMES_DRAW
@@ -146,6 +149,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                     0, //CARDHOUSE_GIS_NUM_STATS
                 }
             }, userId);
+        }
 
         var squadInfoList = await HutManager.GetSquadList(userId);
         uint teamRating = 0;
@@ -195,7 +199,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             mFreePack = 0,
             mPremiumPacksHidden = 0,
             mPackTypeList = UltimateTeam.PackConfig.Packs.Select(pack => pack.StorePackTypeData).ToList(),
-            mServerTime = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
+            mServerTime = UltimateTeam.TimeNowSeconds(),
         };
     }
 
@@ -922,7 +926,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         //Multiplayer tournaments require some more effort to implement...
         return new TournamentListResponse
         {
-            mServerTime = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
+            mServerTime = UltimateTeam.TimeNowSeconds(),
             mTournaments = UltimateTeam.TournamentConfig.Tournaments.Select(tourney => tourney.TournamentInfo).ToList(),
         };
     }
@@ -1063,6 +1067,8 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     }
 
     private ConcurrentDictionary<long, List<long>> _cardsToDecrementContract = new();
+    private ConcurrentDictionary<long, uint> _userIdStartedTimeStampMap = new();
+
     public override async Task<PlayGameResponse> PlayGameAsync(PlayGameRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
@@ -1081,7 +1087,14 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         var created = false;
         if (request.mState == PlayGameState.CARDHOUSE_PGSTATE_ENDING)
         {
-            await HutHelper.Deposit(userId, request.mCredits);
+            if (_userIdStartedTimeStampMap.TryRemove(userId, out var startedTimeStamp))
+            {
+                if (UltimateTeam.TimeNowSeconds() >= startedTimeStamp + 600)
+                {
+                    await HutHelper.Deposit(userId, request.mCredits);
+                }
+            }
+            
             if (request.mTournamentId >= 1 && request.mMatchResult == MatchResult.CARDHOUSE_MATCHRESULT_WON_CUP)
             {
                 var card = await HutManager.GetCard((uint)(8200000 + request.mTournamentId), userId);
@@ -1102,6 +1115,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         if (request.mState == PlayGameState.CARDHOUSE_PGSTATE_STARTING)
         {
             _cardsToDecrementContract[userId] = request.mGameCards;
+            _userIdStartedTimeStampMap[userId] = UltimateTeam.TimeNowSeconds();
         }
 
         var generalInfo = await HutManager.GetGeneralInfo(userId);

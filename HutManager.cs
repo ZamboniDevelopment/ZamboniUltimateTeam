@@ -226,10 +226,10 @@ public static class HutManager
                 stadiumTask
             );
 
-            var logoCardDbId = (await logoTask)[0].mCardDbId;
-            var homeJerseyDbId = (await homeJerseyTask)[0].mCardDbId;
-            var awayJerseyDbId = (await awayJerseyTask)[0].mCardDbId;
-            var stadiumDbId = (await stadiumTask)[0].mCardDbId;
+            var logoCardDbId = (await logoTask).FirstOrDefault().mCardDbId;
+            var homeJerseyDbId = (await homeJerseyTask).FirstOrDefault().mCardDbId;
+            var awayJerseyDbId = (await awayJerseyTask).FirstOrDefault().mCardDbId;
+            var stadiumDbId = (await stadiumTask).FirstOrDefault().mCardDbId;
 
             return new SquadInfo()
             {
@@ -539,7 +539,7 @@ public static class HutManager
 
         if (userId != 0) sql.Append(" AND user_id = @user_id");
         if (searchDeckType.HasValue) sql.Append(" AND deck_type = @search_deck_type");
-        
+
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("card_id", cardId);
         if (userId != 0) cmd.Parameters.AddWithValue("user_id", userId);
@@ -851,7 +851,7 @@ public static class HutManager
                 case CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE: sql.Append(" AND state_id = ANY(@activeStates)"); break;
             }
         }
-        
+
         if (request.mLeagueId >= 0) sql.Append(" AND l.leagueid = @league_id");
         if (request.mTeamId >= 0) sql.Append(" AND h.team_id = @team_id");
 
@@ -869,7 +869,7 @@ public static class HutManager
         if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER) cmd.Parameters.AddWithValue("playerTypes", CardHouseComponent.PlayerTypes.Select(x => (int)x).ToArray());
         if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL) cmd.Parameters.AddWithValue("fieldPlayerTypes", CardHouseComponent.FieldPlayerTypes.Select(x => (int)x).ToArray());
         if (request.mCardState != null && request.mCardState == CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE) cmd.Parameters.AddWithValue("activeStates", CardHouseComponent.ActiveStates.Select(x => (int)x).ToArray());
-        
+
         await using var reader = await cmd.ExecuteReaderAsync();
 
         List<CardData> cardDataList = new List<CardData>();
@@ -898,6 +898,23 @@ public static class HutManager
 
         var count = (long)(await cmd.ExecuteScalarAsync())!;
         return count == 0;
+    }
+
+    public static async Task<bool> IsFirstTeam(long userId)
+    {
+        const string query = @"
+            SELECT COUNT(*) 
+            FROM hut_name_reservations
+            WHERE user_id = @user_id";
+
+        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("user_id", userId);
+
+        var count = (long)(await cmd.ExecuteScalarAsync())!;
+        return count <= 1;
     }
 
     public static async Task InsertNameReservation(long userId, string userName, string teamName, string teamAbbreviation)

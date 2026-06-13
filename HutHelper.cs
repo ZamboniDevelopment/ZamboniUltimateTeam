@@ -60,7 +60,7 @@ public static class HutHelper
             mSellerName = reader.GetString(reader.GetOrdinal("seller_name")),
             mTradeState = (TradeState)reader.GetInt32(reader.GetOrdinal("trade_state")),
             mSecondsLeft = secondsLeft,
-            // mSellerEstDate = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
+            // mSellerEstDate = Why?,
             mInbox = (tradeState == TradeState.CARDHOUSE_TRADESTATE_CLOSED || tradeState == TradeState.CARDHOUSE_TRADESTATE_EXPIRED) && yourBid == YourBid.CARDHOUSE_YOURBID_HIGHEST ? (byte)1 : (byte)0,
             mGlow = (tradeState == TradeState.CARDHOUSE_TRADESTATE_CLOSED || tradeState == TradeState.CARDHOUSE_TRADESTATE_EXPIRED) && yourBid == YourBid.CARDHOUSE_YOURBID_HIGHEST ? (byte)1 : (byte)0,
             mIsWatched = await HutTradeManager.IsWatching(readerUserId, reader.GetInt64(reader.GetOrdinal("trade_id"))) ? (byte)1 : (byte)0,

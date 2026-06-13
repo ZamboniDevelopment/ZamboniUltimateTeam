@@ -35,7 +35,7 @@ public static class UltimateDatabase
         const string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS hut_general_info (
                     user_id BIGINT PRIMARY KEY,
-                    pucks INTEGER DEFAULT 1000,
+                    pucks INTEGER,
                     stats INTEGER[] DEFAULT '{}'
                 );";
 
@@ -299,7 +299,7 @@ public static class UltimateDatabase
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0
                 },
                 mCardSubTypeId = (CardSubType)reader.GetInt16(reader.GetOrdinal("fieldpos")),
-                mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
+                mDateIssued = UltimateTeam.TimeNowSeconds(),
                 mTeamId = (uint)reader.GetInt32(reader.GetOrdinal("teamid")),
                 mListTrainingCards = new List<int>(),
                 mUsesRemaining = (byte)Random.Shared.Next(6, 13),

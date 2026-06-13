@@ -263,7 +263,7 @@ public static class HutTradeManager
         cmd.Parameters.AddWithValue("trade_state", (int)TradeState.CARDHOUSE_TRADESTATE_ACTIVE);
         cmd.Parameters.AddWithValue("duration_seconds", request.mPeriod);
         // cmd.Parameters.AddWithValue("duration_seconds", 20);
-        cmd.Parameters.AddWithValue("created_at_seconds", (long)(uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+        cmd.Parameters.AddWithValue("created_at_seconds", (long)UltimateTeam.TimeNowSeconds());
 
         var tradeId = await cmd.ExecuteScalarAsync();
 
@@ -319,7 +319,7 @@ public static class HutTradeManager
             cmd.Parameters.AddWithValue("has_cards", containsCards);
             var cards = containsCards ? request.mCardList.ToArray() : Array.Empty<long>();
             cmd.Parameters.AddWithValue("card_ids", cards);
-            cmd.Parameters.AddWithValue("created_at_seconds", (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+            cmd.Parameters.AddWithValue("created_at_seconds", (long)UltimateTeam.TimeNowSeconds());
 
             var result = await cmd.ExecuteScalarAsync();
 

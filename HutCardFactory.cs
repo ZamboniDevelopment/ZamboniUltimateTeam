@@ -36,7 +36,7 @@ public static class HutCardFactory
             mSalaryCap = 0,
             mListStats = new List<int>(),
             mCardSubTypeId = cardSubType,
-            mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
+            mDateIssued = UltimateTeam.TimeNowSeconds(),
             mTeamId = (uint)await UltimateDatabase.TeamIdFromDbId(dbId),
             mListTrainingCards = new List<int>(),
             mUsesRemaining = (byte)(CardHouseComponent.TrophyTypes.Contains(cardSubType) ? 1 : 0)
@@ -126,7 +126,7 @@ public static class HutCardFactory
         cmd.Parameters.AddWithValue("list_stats", cardData.mListStats.ToArray());
         cmd.Parameters.AddWithValue("list_training_cards", cardData.mListTrainingCards.ToArray());
         cmd.Parameters.AddWithValue("sub_type", (int)cardData.mCardSubTypeId);
-        cmd.Parameters.AddWithValue("date_issued", (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+        cmd.Parameters.AddWithValue("date_issued", (long)UltimateTeam.TimeNowSeconds());
         cmd.Parameters.AddWithValue("team_id", (int)cardData.mTeamId);
         cmd.Parameters.AddWithValue("uses_remaining", (int)cardData.mUsesRemaining);
         if (updateDeck)

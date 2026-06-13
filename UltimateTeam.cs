@@ -42,4 +42,9 @@ public static class UltimateTeam
         }
         return deserialize(path);
     }
+    
+    public static uint TimeNowSeconds()
+    {
+        return (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+    }
 }
