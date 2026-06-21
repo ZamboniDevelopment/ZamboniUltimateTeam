@@ -903,10 +903,12 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
 
         var cardList = await HutManager.GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, request.mActiveState);
-        var previousActive = cardList[0];
-        previousActive.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
-
-        await HutCardFactory.CreateOrUpdateCard(previousActive, userId);
+        var previousActive = cardList.FirstOrDefault();
+        if (previousActive.mCardId != 0)
+        {
+            previousActive.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
+            await HutCardFactory.CreateOrUpdateCard(previousActive, userId);
+        }
 
         var target = await HutManager.GetCard(request.mCardId, userId);
         target.Card.mCardStateId = request.mActiveState;

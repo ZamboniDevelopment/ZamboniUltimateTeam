@@ -270,7 +270,7 @@ public static class HutManager
             if (loopUserId == excludedUserId) continue;
 
             var logoCardResult = await GetCardList(loopUserId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE);
-            var logoCardDbId = logoCardResult[0].mCardDbId;
+            var logoCardDbId = logoCardResult.FirstOrDefault().mCardDbId;
 
             var gamerInfo = await GetGamerInfo(loopUserId); //Do this more efficiently
             var abbreviation = gamerInfo.Value.mTeamAbbreviation;
