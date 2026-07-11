@@ -1022,9 +1022,20 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         };
     }
 
+    private ConcurrentDictionary<long, bool> _onlineGames = new();
 
     public override async Task<MatchRegisterStartResponse> MatchRegisterStartAsync(MatchRegisterStartRequest request, BlazeRpcContext context)
     {
+        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+        if (request.mOnlineGame == 1)
+        {
+            _onlineGames[userId] = true;
+        }
+        else
+        {
+            _onlineGames[userId] = false;
+        }
+
         return new MatchRegisterStartResponse();
     }
 
@@ -1093,10 +1104,19 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             {
                 if (UltimateTeam.TimeNowSeconds() >= startedTimeStamp + 600)
                 {
-                    await HutHelper.Deposit(userId, request.mCredits);
+                    int credits = request.mCredits;
+                    if (_onlineGames.TryRemove(userId, out bool isOnline))
+                    {
+                        if (isOnline)
+                        {
+                            credits *= UltimateTeam.HutConfig.Values[1] / 100;
+                        }
+                    }
+
+                    await HutHelper.Deposit(userId, credits);
                 }
             }
-            
+
             if (request.mTournamentId >= 1 && request.mMatchResult == MatchResult.CARDHOUSE_MATCHRESULT_WON_CUP)
             {
                 var card = await HutManager.GetCard((uint)(8200000 + request.mTournamentId), userId);

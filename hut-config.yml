@@ -1,7 +1,7 @@
 Values:
   # Todo figure if other placeholders have meaning
   - 999 # Custom: Friend List Limit
-  - 21
+  - 200 # Custom: Online Total Puck Reward Multiplier as a Percentage
   - 22
   - 33
   - 44
