@@ -12,7 +12,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 1000
+    Prize: 250
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -33,7 +33,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 2000
+    Prize: 300
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -54,7 +54,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 3000
+    Prize: 400
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -75,7 +75,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 4000
+    Prize: 550
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -96,7 +96,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 5000
+    Prize: 750
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -117,7 +117,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 6000
+    Prize: 800
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -138,7 +138,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 7000
+    Prize: 950
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -159,7 +159,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 8000
+    Prize: 1050
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -180,7 +180,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 9000
+    Prize: 1150
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -201,7 +201,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 10000
+    Prize: 1250
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -222,7 +222,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 11000
+    Prize: 1350
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
@@ -243,7 +243,7 @@ Tournaments:
     Elg2Type: 0
     Elg2Data: 0
     MatchLenght: 0
-    Prize: 12000
+    Prize: 1550
     Reward1: 1000
     Reward2: 1000
     Reward3: 1000
