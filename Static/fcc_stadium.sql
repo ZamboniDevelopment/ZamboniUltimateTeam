@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict Q9aGhYvRKS0ZYXwzgDVuHvf3dQsfRSlMuCdTksKZ5vNeyRtOcyDQFHA3j6VWOkS
+\restrict BhAaH0SOqPUgWTmoVRJnI0nkL5aOpIThWZuq1fEuLIgdvv29lM8fXHDlermna9t
 
--- Dumped from database version 18.3
--- Dumped by pg_dump version 18.3
+-- Dumped from database version 18.4
+-- Dumped by pg_dump version 18.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -40,7 +40,8 @@ CREATE TABLE public.fcc_stadium (
     arenatype integer,
     name character varying,
     category integer,
-    header character varying
+    header character varying,
+    zcat integer DEFAULT 0
 );
 
 
@@ -50,13 +51,13 @@ ALTER TABLE public.fcc_stadium OWNER TO postgres;
 -- Data for Name: fcc_stadium; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.fcc_stadium (carddbid, capacity, biodescription, weightrare, cardassetid, description, assetid, stadiumid, value, arenatype, name, category, header) FROM stdin;
-6200000	50	StadiumDetailDesc	0	0	StadiumDesc_1	0	0	80	0	EA SPORTS ™ Arena1	4	Stadium
-6200001	75	StadiumDetailDesc	0	0	StadiumDesc_4	1	0	80	0	EA SPORTS ™ Arena4	4	Stadium
-6200002	100	StadiumDetailDesc	10	0	StadiumDesc_5	2	0	80	0	EA SPORTS ™ Arena5	4	Stadium
-6200003	50	StadiumDetailDesc	0	1	StadiumDesc_6	3	0	80	1	EA SPORTS ™ Arena6	4	Stadium
-6200004	75	StadiumDetailDesc	0	1	StadiumDesc_12	4	0	80	1	EA SPORTS ™ Arena12	4	Stadium
-6200005	100	StadiumDetailDesc	10	1	StadiumDesc_13	5	0	80	1	EA SPORTS ™ Arena13	4	Stadium
+COPY public.fcc_stadium (carddbid, capacity, biodescription, weightrare, cardassetid, description, assetid, stadiumid, value, arenatype, name, category, header, zcat) FROM stdin;
+6200000	50	StadiumDetailDesc	0	0	StadiumDesc_1	0	0	80	0	EA SPORTS ™ Arena1	4	Stadium	0
+6200001	75	StadiumDetailDesc	0	0	StadiumDesc_4	1	0	80	0	EA SPORTS ™ Arena4	4	Stadium	0
+6200002	100	StadiumDetailDesc	10	0	StadiumDesc_5	2	0	80	0	EA SPORTS ™ Arena5	4	Stadium	0
+6200003	50	StadiumDetailDesc	0	1	StadiumDesc_6	3	0	80	1	EA SPORTS ™ Arena6	4	Stadium	0
+6200004	75	StadiumDetailDesc	0	1	StadiumDesc_12	4	0	80	1	EA SPORTS ™ Arena12	4	Stadium	0
+6200005	100	StadiumDetailDesc	10	1	StadiumDesc_13	5	0	80	1	EA SPORTS ™ Arena13	4	Stadium	0
 \.
 
 
@@ -64,5 +65,5 @@ COPY public.fcc_stadium (carddbid, capacity, biodescription, weightrare, cardass
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Q9aGhYvRKS0ZYXwzgDVuHvf3dQsfRSlMuCdTksKZ5vNeyRtOcyDQFHA3j6VWOkS
+\unrestrict BhAaH0SOqPUgWTmoVRJnI0nkL5aOpIThWZuq1fEuLIgdvv29lM8fXHDlermna9t
 
