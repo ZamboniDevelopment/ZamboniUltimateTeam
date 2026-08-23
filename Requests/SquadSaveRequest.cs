@@ -28,7 +28,7 @@ public struct SquadSaveRequest
     public uint mStarRating;
     
     [TdfMember("SQID")] 
-    public uint mSquadId;
+    public int mSquadId;
     
     [TdfMember("UID")] 
     public long mUserId;

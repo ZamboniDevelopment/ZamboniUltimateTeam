@@ -23,7 +23,7 @@ public static class UltimateDatabase
         CreateHutCardsTable();
 
         CreateHutTournamentsTable();
-        
+
         CreateHutNameReservationsTable();
     }
 
@@ -35,7 +35,7 @@ public static class UltimateDatabase
         const string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS hut_general_info (
                     user_id BIGINT PRIMARY KEY,
-                    pucks INTEGER DEFAULT 100,
+                    pucks INTEGER,
                     stats INTEGER[] DEFAULT '{}'
                 );";
 
@@ -95,7 +95,8 @@ public static class UltimateDatabase
 
         const string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS hut_squad_info (
-                    user_id BIGINT PRIMARY KEY,
+                    squad_id SERIAL PRIMARY KEY,
+                    user_id BIGINT,
                     chemistry INTEGER,
                     formation_id INTEGER,
                     lines INTEGER[] DEFAULT '{}',
@@ -103,7 +104,7 @@ public static class UltimateDatabase
                     squad_name VARCHAR,
                     players BIGINT[] DEFAULT '{}',
                     star_rating INTEGER,
-                    squad_id INTEGER
+                    active BOOLEAN
                 );";
 
         using var cmd = new NpgsqlCommand(createTableQuery, conn);
@@ -129,6 +130,7 @@ public static class UltimateDatabase
                     injury_games SMALLINT,
                     injury_type SMALLINT,
                     morale SMALLINT, --mMaxTrainingCardsCanApply/Potential
+                    owners SMALLINT,
                     preferred_position_id SMALLINT,
                     discard_price SMALLINT,
                     rare_flag SMALLINT,
@@ -166,7 +168,7 @@ public static class UltimateDatabase
         using var cmd = new NpgsqlCommand(createTableQuery, conn);
         cmd.ExecuteNonQuery();
     }
-        
+
     private static void CreateHutNameReservationsTable()
     {
         using var conn = new NpgsqlConnection(ConnectionString);
@@ -261,42 +263,71 @@ public static class UltimateDatabase
         if (await reader.ReadAsync())
         {
             short rating = reader.GetInt16(reader.GetOrdinal("rating"));
+            List<byte> attributes = new List<byte>
+            {
+                reader.GetByte(reader.GetOrdinal("attribute1")),
+                reader.GetByte(reader.GetOrdinal("attribute2")),
+                reader.GetByte(reader.GetOrdinal("attribute3")),
+                reader.GetByte(reader.GetOrdinal("attribute4")),
+                reader.GetByte(reader.GetOrdinal("attribute5")),
+                reader.GetByte(reader.GetOrdinal("attribute6")),
+                reader.GetByte(reader.GetOrdinal("attribute7")),
+                reader.GetByte(reader.GetOrdinal("attribute8")),
+            };
             return new CardData
             {
-                mAttributes = new List<byte>
-                {
-                    reader.GetByte(reader.GetOrdinal("attribute1")),
-                    reader.GetByte(reader.GetOrdinal("attribute2")),
-                    reader.GetByte(reader.GetOrdinal("attribute3")),
-                    reader.GetByte(reader.GetOrdinal("attribute4")),
-                    reader.GetByte(reader.GetOrdinal("attribute5")),
-                    reader.GetByte(reader.GetOrdinal("attribute6")),
-                    reader.GetByte(reader.GetOrdinal("attribute7")),
-                    reader.GetByte(reader.GetOrdinal("attribute8")),
-                },
+                mAttributes = attributes,
                 mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE,
                 mCardDbId = cardDbId,
                 mFormationId = reader.GetByte(reader.GetOrdinal("formationid")),
-                // mFREE = 40, //
-                mCareerRemaining = 50,
+                // mFREE = 40, //Does this has meaning?
+                mCareerRemaining = reader.GetByte(reader.GetOrdinal("attribute8")),
                 mInjuryGames = reader.GetByte(reader.GetOrdinal("injuryduration")),
                 mInjuryType = reader.GetByte(reader.GetOrdinal("injury")),
-                mMaxTrainingCardsCanApply = HutHelper.DetermineTrainingCardsCanApply(rating),
+                mNumberOfOwners = 1,
+                mMaxTrainingCardsCanApply = reader.GetByte(reader.GetOrdinal("attribute7")),
                 mPreferredPositionId = reader.GetByte(reader.GetOrdinal("preferredposition")),
-                mDiscardPrice = 100,
+                mDiscardPrice = 0,
                 mRareFlag = reader.GetByte(reader.GetOrdinal("rare")),
                 mRating = (byte)rating,
-                mSalaryCap = HutHelper.DetermineSalary(rating),
-                mListStats = new List<int>(),
+                mSalaryCap = HutHelper.DetermineSalary(attributes),
+                mListStats = new List<int>
+                {
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                },
                 mCardSubTypeId = (CardSubType)reader.GetInt16(reader.GetOrdinal("fieldpos")),
-                mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
+                mDateIssued = UltimateTeam.TimeNowSeconds(),
                 mTeamId = (uint)reader.GetInt32(reader.GetOrdinal("teamid")),
                 mListTrainingCards = new List<int>(),
-                mUsesRemaining = 20
+                mUsesRemaining = (byte)Random.Shared.Next(6, 13),
             };
         }
 
         return null;
+    }
+
+    public static async Task<int> TeamIdFromDbId(uint dbId)
+    {
+        await using var conn = new NpgsqlConnection(ConnectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+        SELECT teamid FROM fcc_badges WHERE carddbid = @carddbid
+        UNION ALL
+        SELECT teamid FROM fcc_kitcards WHERE carddbid = @carddbid
+        LIMIT 1;";
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("carddbid", (int)dbId);
+
+        var result = await cmd.ExecuteScalarAsync();
+
+        if (result != null && result != DBNull.Value)
+        {
+            return Convert.ToInt32(result);
+        }
+
+        return 0;
     }
 
     public static async Task<HutTrainingCard> GetTrainingCardByDbIdAsync(uint cardDbId)
@@ -316,7 +347,7 @@ public static class UltimateDatabase
             return new HutTrainingCard
             {
                 CardDbId = (uint)reader.GetInt32(0),
-                CardSubtype = reader.GetInt32(1),
+                CardSubType = reader.GetInt32(1),
                 WeightRare = reader.GetInt32(2),
                 CardAssetId = reader.GetInt32(3),
                 Description = reader.GetString(4),
@@ -354,6 +385,32 @@ public static class UltimateDatabase
 
         throw new Exception();
     }
+    
+    public static async Task<HutKitCard> GetKitCardByDbIdAsync(uint cardDbId)
+    {
+        const string sql = "SELECT * FROM fcc_kitcards WHERE carddbid = @cardDbId";
+
+        await using var conn = new NpgsqlConnection(ConnectionString);
+        await conn.OpenAsync();
+
+        await using var command = new NpgsqlCommand(sql, conn);
+        command.Parameters.AddWithValue("cardDbId", (int)cardDbId);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if (await reader.ReadAsync())
+        {
+            return new HutKitCard
+            {
+                CardDbId = (uint)reader.GetInt32(0),
+                Alternative = reader.GetBoolean(1),
+                TeamId = (uint)reader.GetInt32(2),
+                IsAway = reader.GetBoolean(3),
+            };
+        }
+
+        throw new Exception();
+    }
 
     public static async Task<List<HutKitCard>> GetKitCards(bool? isAway, bool? isRare)
     {
@@ -383,11 +440,40 @@ public static class UltimateDatabase
             {
                 CardDbId = (uint)reader.GetInt64(0),
                 Alternative = reader.GetBoolean(1),
-                TeamId = reader.GetInt32(2),
+                TeamId = (uint)reader.GetInt32(2),
                 IsAway = reader.GetBoolean(3),
             });
         }
 
         return returningList;
+    }
+
+    public static async Task AwardAll(long userId)
+    {
+        await using var conn = new NpgsqlConnection(ConnectionString);
+        await conn.OpenAsync();
+
+        var sql = new StringBuilder(@"
+            SELECT carddbid
+            FROM fcc_playercards
+            WHERE 1=1");
+
+        await using var command = new NpgsqlCommand(sql.ToString(), conn);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+
+        while (await reader.ReadAsync())
+        {
+            var existing = await HutManager.GetCard((uint)reader.GetInt32(0), userId);
+            if (existing.Card.mCardId != 0)
+            {
+                await HutCardFactory.CreateOrUpdateCard(existing.Card, userId, DeckType.CARDHOUSE_DECK_STICKERBOOK);
+            }
+            else
+            {
+                await HutCardFactory.CreatePlayerCard(userId, (uint)reader.GetInt32(0));
+            }
+        }
     }
 }

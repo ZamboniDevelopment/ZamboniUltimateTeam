@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using NLog;
 using Npgsql;
 using ZamboniUltimateTeam.Structs;
@@ -22,7 +23,7 @@ public static class HutHelper
             mInjuryGames = (byte)reader.GetInt16(reader.GetOrdinal("injury_games")),
             mInjuryType = (byte)reader.GetInt16(reader.GetOrdinal("injury_type")),
             mMaxTrainingCardsCanApply = (byte)reader.GetInt16(reader.GetOrdinal("morale")),
-            mNumberOfOwners = 1, //(byte)reader.GetInt16(reader.GetOrdinal("free")), ///TODO
+            mNumberOfOwners = (byte)reader.GetInt16(reader.GetOrdinal("owners")),
             mPreferredPositionId = (byte)reader.GetInt16(reader.GetOrdinal("preferred_position_id")),
             mDiscardPrice = (byte)reader.GetInt16(reader.GetOrdinal("discard_price")),
             mRareFlag = (byte)reader.GetInt16(reader.GetOrdinal("rare_flag")),
@@ -59,16 +60,19 @@ public static class HutHelper
             mSellerName = reader.GetString(reader.GetOrdinal("seller_name")),
             mTradeState = (TradeState)reader.GetInt32(reader.GetOrdinal("trade_state")),
             mSecondsLeft = secondsLeft,
-            // mSellerEstDate = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
-            mInbox = tradeState == TradeState.CARDHOUSE_TRADESTATE_CLOSED || tradeState == TradeState.CARDHOUSE_TRADESTATE_EXPIRED && yourBid == YourBid.CARDHOUSE_YOURBID_HIGHEST ? (byte)1 : (byte)0,
-            mGlow = tradeState == TradeState.CARDHOUSE_TRADESTATE_CLOSED || tradeState == TradeState.CARDHOUSE_TRADESTATE_EXPIRED && yourBid == YourBid.CARDHOUSE_YOURBID_HIGHEST ? (byte)1 : (byte)0,
+            // mSellerEstDate = Why?,
+            mInbox = (tradeState == TradeState.CARDHOUSE_TRADESTATE_CLOSED || tradeState == TradeState.CARDHOUSE_TRADESTATE_EXPIRED) && yourBid == YourBid.CARDHOUSE_YOURBID_HIGHEST ? (byte)1 : (byte)0,
+            mGlow = (tradeState == TradeState.CARDHOUSE_TRADESTATE_CLOSED || tradeState == TradeState.CARDHOUSE_TRADESTATE_EXPIRED) && yourBid == YourBid.CARDHOUSE_YOURBID_HIGHEST ? (byte)1 : (byte)0,
             mIsWatched = await HutTradeManager.IsWatching(readerUserId, reader.GetInt64(reader.GetOrdinal("trade_id"))) ? (byte)1 : (byte)0,
             mOfferPendingCount = (int)await HutTradeManager.ActiveOffersCount(reader.GetInt64(reader.GetOrdinal("trade_id"))),
         };
     }
 
+    private static List<int>? _cachedLeagueIds;
     public static async Task<List<int>> GetAllLeagueIds()
     {
+        if (_cachedLeagueIds != null) return _cachedLeagueIds;
+
         var leagueIds = new List<int>();
 
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
@@ -84,12 +88,17 @@ public static class HutHelper
             leagueIds.Add(reader.GetInt32(0));
         }
 
-        return leagueIds;
+        _cachedLeagueIds = leagueIds;
+        return _cachedLeagueIds;
     }
-
+    
+    private static readonly ConcurrentDictionary<string, List<int>> CachedCardDbIds = new();
     public static async Task<List<int>> GetAllDistinctCardDbIds(string tableName)
     {
-        var trainingCardIds = new List<int>();
+        if (CachedCardDbIds.TryGetValue(tableName, out var cached))
+            return cached;
+
+        var cardDbIds = new List<int>();
 
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
@@ -101,10 +110,11 @@ public static class HutHelper
 
         while (await reader.ReadAsync())
         {
-            trainingCardIds.Add(reader.GetInt32(0));
+            cardDbIds.Add(reader.GetInt32(0));
         }
 
-        return trainingCardIds;
+        CachedCardDbIds[tableName] = cardDbIds;
+        return cardDbIds;
     }
 
     public static async Task<ISOfferInfo> ReadOffer(NpgsqlDataReader reader)
@@ -132,7 +142,8 @@ public static class HutHelper
         var generalIfo = await HutManager.GetGeneralInfo(userId);
         var currentCredits = generalIfo.Value.mCredits;
 
-        if (currentCredits < amount || amount <= 0) return false;
+        if (currentCredits < amount) return false;
+        if (amount <= 0) return true;
 
         var updated = generalIfo.Value with { mCredits = currentCredits - amount };
 
@@ -188,45 +199,12 @@ public static class HutHelper
         await HutManager.IncrementVersionInfo(userId, HutManager.VersionType.General);
     }
 
-    public static short DetermineSalary(int overall)
+    public static short DetermineSalary(List<byte> attributes)
     {
-        const int minOverAll = 62;
-        const int maxOverAll = 99;
-
-        const int baseSalary = 400;
-        const int pricePerPoint = 25;
-        const double highBias = 1.6;
-
-        int ovr = Math.Clamp(overall, minOverAll, maxOverAll);
-        int pointsAboveMin = ovr - minOverAll;
-
-        double salary = baseSalary + (pointsAboveMin * pricePerPoint) + Math.Pow(pointsAboveMin, highBias);
-
-        salary *= 0.1;
-
-        return (short)Math.Round(salary);
+        long sum = attributes[0] + attributes[1] + attributes[2] + attributes[3] + attributes[4];
+        long cubed = sum * sum * sum;
+        short result = (short)Math.Round(cubed / 500000.0);
+        return (short)(result - 5);
     }
-
-    public static byte DetermineTrainingCardsCanApply(int overall)
-    {
-        int minOverAll = 62;
-        int maxOverAll = 82;
-        double maxSlots = 12.0;
-        double minSlots = 2.0;
-
-        int currentOvr = Math.Clamp(overall, minOverAll, maxOverAll);
-
-        double totalOvrRange = maxOverAll - minOverAll;
-        double totalSlotRange = maxSlots - minSlots;
-        double slotsLostPerPoint = totalSlotRange / totalOvrRange;
-
-        double result = maxSlots - (currentOvr - minOverAll) * slotsLostPerPoint;
-
-        return (byte)Math.Round(result);
-    }
-
-    public static List<long> ToLongList(List<CardData> cardDatas)
-    {
-        return cardDatas.Select(card => card.mCardId).ToList();
-    }
+    
 }

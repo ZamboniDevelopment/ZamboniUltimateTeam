@@ -16,7 +16,8 @@ public static class HutTradeManager
     public static async Task<ISSearchResponse> SearchTradesAsync(ISSearchRequest request, long searcherUserId)
     {
         List<ISTradeInfo> results = new List<ISTradeInfo>();
-
+        int totalCount = 0;
+        
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
@@ -25,6 +26,7 @@ public static class HutTradeManager
         var sql = new StringBuilder(@"
             SELECT t.*, 
                    c.*, 
+                   COUNT(*) OVER() as total_matches,
                    GREATEST(0, (t.created_at_seconds + t.duration_seconds) - EXTRACT(EPOCH FROM NOW()))::INT AS expire_time
             FROM hut_trade_info t
             INNER JOIN hut_cards c ON t.card_id = c.card_id
@@ -33,12 +35,12 @@ public static class HutTradeManager
 
         switch (request.mCardType)
         {
-            case CardSearchTypeParameter.SEARCH_PLAYERS: sql.Append(" AND c.sub_type BETWEEN 0 AND 4"); break;
-            case CardSearchTypeParameter.SEARCH_HEAD_COACH: sql.Append(" AND c.sub_type = 6"); break;
-            case CardSearchTypeParameter.SEARCH_TEAM_INFORMATION: sql.Append(" AND c.sub_type IN (10, 12)"); break;
-            case CardSearchTypeParameter.SEARCH_TRAINING: sql.Append(" AND c.sub_type BETWEEN 51 AND 62"); break;
-            case CardSearchTypeParameter.SEARCH_CONTRACTS: sql.Append(" AND c.sub_type = 201"); break;
-            case CardSearchTypeParameter.SEARCH_ARENAS: sql.Append(" AND c.sub_type = 11"); break;
+            case CardSearchTypeParameter.SEARCH_PLAYERS: sql.Append(" AND sub_type = ANY(@playerTypes)"); break;
+            case CardSearchTypeParameter.SEARCH_HEAD_COACH: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH); break;
+            case CardSearchTypeParameter.SEARCH_TEAM_INFORMATION: sql.Append(" AND sub_type = ANY(@teamInformationTypes)"); break;
+            case CardSearchTypeParameter.SEARCH_TRAINING: sql.Append(" AND sub_type = ANY(@trainingTypes)"); break;
+            case CardSearchTypeParameter.SEARCH_CONTRACTS: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER); break;
+            case CardSearchTypeParameter.SEARCH_ARENAS: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM); break;
             case CardSearchTypeParameter.ANY: break;
             default: throw new NotImplementedException();
         }
@@ -49,7 +51,7 @@ public static class HutTradeManager
         if (request.mPosition >= 0) sql.Append(" AND c.sub_type = " + request.mPosition);
         if (request.mTeamId >= 0) sql.Append(" AND c.team_id = " + request.mTeamId);
 
-        sql.Append(request.mNonActive == 0 ? " AND t.trade_state = 1" : " AND t.trade_state >= 1");
+        sql.Append(request.mNonActive == 0 ? " AND t.trade_state = 1" : " AND t.trade_state != 3");
 
         sql.Append(request.mMyTrades == 0 ? " AND t.user_id != @userId" : " AND t.user_id = @userId");
 
@@ -57,6 +59,10 @@ public static class HutTradeManager
         if (request.mMaxCredits > 0) sql.Append(" AND (CASE WHEN t.highest_bid > 0 THEN t.highest_bid ELSE t.starting_price END) <= @maxCredits");
         if (request.mMinBuyPrice > 0) sql.Append(" AND t.buy_out_price >= @minBuy");
         if (request.mMaxBuyPrice > 0) sql.Append(" AND t.buy_out_price <= @maxBuy AND t.buy_out_price > 0");
+        
+        sql.Append(" ORDER BY expire_time ASC");
+        // if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
+        if (request.mStart > 0) sql.Append(" OFFSET " + request.mStart);
 
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
 
@@ -67,17 +73,22 @@ public static class HutTradeManager
         if (request.mMinBuyPrice > 0) cmd.Parameters.AddWithValue("minBuy", request.mMinBuyPrice);
         if (request.mLeagueId >= 0) cmd.Parameters.AddWithValue("league_id", request.mLeagueId);
 
+        if (request.mCardType == CardSearchTypeParameter.SEARCH_PLAYERS) cmd.Parameters.AddWithValue("playerTypes", CardHouseComponent.PlayerTypes.Select(x => (int)x).ToArray());
+        if (request.mCardType == CardSearchTypeParameter.SEARCH_TEAM_INFORMATION) cmd.Parameters.AddWithValue("teamInformationTypes", CardHouseComponent.TeamInformationTypes.Select(x => (int)x).ToArray());
+        if (request.mCardType == CardSearchTypeParameter.SEARCH_TRAINING) cmd.Parameters.AddWithValue("trainingTypes", CardHouseComponent.TrainingTypes.Select(x => (int)x).ToArray());
+
         await using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
         {
+            if (totalCount == 0) totalCount = Convert.ToInt32(reader["total_matches"]);
             results.Add(await HutHelper.ReadTrade(reader, searcherUserId));
         }
 
         return new ISSearchResponse
         {
             mSearchResults = results,
-            mTotalCount = results.Count
+            mTotalCount = totalCount
         };
     }
 
@@ -88,6 +99,13 @@ public static class HutTradeManager
 
         await CleanAndExecuteExpired();
 
+        if (request.mRemove is > 1 or < 0) throw new NotImplementedException();
+        if (request.mRemove == 1)
+        {
+            await HardDeleteTrade(request.mTradeId);
+            return (new ISViewTradeResponse(), null);
+        }
+        
         var sql = @"
         SELECT *, 
                GREATEST(0, (created_at_seconds + duration_seconds) - EXTRACT(EPOCH FROM NOW()))::INT AS expire_time
@@ -111,7 +129,7 @@ public static class HutTradeManager
             }, null);
         }
 
-        return (new ISViewTradeResponse(), new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NO_SUCH_TRADE));
+        return (new ISViewTradeResponse(), null);
     }
 
     public static async Task CleanAndExecuteExpired()
@@ -212,9 +230,9 @@ public static class HutTradeManager
 
         cmd.Parameters.AddWithValue("buy_out_price", request.mCredits);
         cmd.Parameters.AddWithValue("trade_state", (int)TradeState.CARDHOUSE_TRADESTATE_ACTIVE);
-        // cmd.Parameters.AddWithValue("duration_seconds", request.mPeriod);
-        cmd.Parameters.AddWithValue("duration_seconds", 20);
-        cmd.Parameters.AddWithValue("created_at_seconds", (long)(uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+        cmd.Parameters.AddWithValue("duration_seconds", request.mPeriod);
+        // cmd.Parameters.AddWithValue("duration_seconds", 20);
+        cmd.Parameters.AddWithValue("created_at_seconds", (long)UltimateTeam.TimeNowSeconds());
 
         var tradeId = await cmd.ExecuteScalarAsync();
 
@@ -270,7 +288,7 @@ public static class HutTradeManager
             cmd.Parameters.AddWithValue("has_cards", containsCards);
             var cards = containsCards ? request.mCardList.ToArray() : Array.Empty<long>();
             cmd.Parameters.AddWithValue("card_ids", cards);
-            cmd.Parameters.AddWithValue("created_at_seconds", (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+            cmd.Parameters.AddWithValue("created_at_seconds", (long)UltimateTeam.TimeNowSeconds());
 
             var result = await cmd.ExecuteScalarAsync();
 
@@ -510,26 +528,21 @@ public static class HutTradeManager
 
         await HutHelper.Deposit(sellerId, price);
 
-        var cardData = (await HutManager.GetCard(cardId)).Card;
+        var cardData = (await HutManager.GetCard(cardId, sellerId)).Card;
         cardData.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
-        if (buyOut)
-        {
-            await HutCardFactory.CreateOrUpdateCard(cardData, buyerId, DeckType.CARDHOUSE_DECK_UNASSIGNED);
-            await HutManager.IncrementVersionInfo(buyerId, HutManager.VersionType.Unassigned);
-            await RemoveWatching(tradeId, buyerId);
-        }
-        else
-        {
-            await HutCardFactory.CreateOrUpdateCard(cardData, buyerId, DeckType.CARDHOUSE_DECK_INBOX);
-        }
-
+        cardData.mNumberOfOwners = (byte)(cardData.mNumberOfOwners + 1);
+        
+        await HutCardFactory.CreateOrUpdateCard(cardData, buyerId, DeckType.CARDHOUSE_DECK_UNASSIGNED);
+        await HutManager.IncrementVersionInfo(buyerId, HutManager.VersionType.Unassigned);
+        
         if (offerBackCards.Count >= 1)
         {
             foreach (var offerBackCardId in offerBackCards)
             {
-                var offerBackCardData = await HutManager.GetCard(offerBackCardId, buyerId);
-                offerBackCardData.Card.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
-                await HutCardFactory.CreateOrUpdateCard(offerBackCardData.Card, sellerId, DeckType.CARDHOUSE_DECK_UNASSIGNED);
+                var offerBackCardData = (await HutManager.GetCard(offerBackCardId, buyerId)).Card;
+                offerBackCardData.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
+                offerBackCardData.mNumberOfOwners = (byte)(offerBackCardData.mNumberOfOwners + 1);
+                await HutCardFactory.CreateOrUpdateCard(offerBackCardData, sellerId, DeckType.CARDHOUSE_DECK_UNASSIGNED);
             }
 
             await HutManager.IncrementVersionInfo(sellerId, HutManager.VersionType.Unassigned);
@@ -590,16 +603,19 @@ public static class HutTradeManager
     public static async Task<List<ISTradeInfo>> GetWatchedTrades(long userId)
     {
         var watchedTrades = new List<ISTradeInfo>();
+        var tradesToRemove = new List<long>();
 
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
         string sql = @"
-            SELECT t.*,
-                   GREATEST(0, (t.created_at_seconds + t.duration_seconds) - EXTRACT(EPOCH FROM NOW()))::INT AS expire_time
-                   FROM hut_trade_info t
-            INNER JOIN hut_watching w ON t.trade_id = w.trade_id
-            WHERE w.user_id = @user_id";
+        SELECT t.*, 
+               (c.user_id = @user_id AND c.deck_type != 6) AS claimed,
+               GREATEST(0, (t.created_at_seconds + t.duration_seconds) - EXTRACT(EPOCH FROM NOW()))::INT AS expire_time
+        FROM hut_trade_info t
+        INNER JOIN hut_watching w ON t.trade_id = w.trade_id
+        INNER JOIN hut_cards c ON t.card_id = c.card_id
+        WHERE w.user_id = @user_id";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("user_id", userId);
@@ -607,7 +623,25 @@ public static class HutTradeManager
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            watchedTrades.Add(await HutHelper.ReadTrade(reader, userId));
+            long tradeId = reader.GetInt64(reader.GetOrdinal("trade_id"));
+            bool isOwner = reader.GetBoolean(reader.GetOrdinal("claimed"));
+
+            if (isOwner)
+            {
+                tradesToRemove.Add(tradeId);
+            }
+            else
+            {
+                watchedTrades.Add(await HutHelper.ReadTrade(reader, userId));
+            }
+        }
+    
+        if (tradesToRemove.Count > 0)
+        {
+            foreach (var tradeId in tradesToRemove)
+            {
+                await RemoveWatching(tradeId, userId);
+            }
         }
 
         return watchedTrades;
@@ -667,7 +701,7 @@ public static class HutTradeManager
             return YourBid.CARDHOUSE_YOURBID_NONE;
         }
 
-        if (states.Contains(7) && states.Contains(2))
+        if (states.Contains(7) || states.Contains(2))
         {
             return YourBid.CARDHOUSE_YOURBID_HIGHEST;
         }
@@ -688,13 +722,15 @@ public static class HutTradeManager
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
-        const string sql = @"
+        var sql = new StringBuilder(@"
             SELECT * FROM hut_offer_info 
-            WHERE trade_id = @tid AND offer_state = 1";
+            WHERE trade_id = @tid AND offer_state = 1");
 
-        await using var cmd = new NpgsqlCommand(sql, conn);
+        if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
+        if (request.mStart > 0) sql.Append(" OFFSET " + (request.mStart));
+
+        await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("tid", request.mTradeId);
-
         await using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
@@ -719,6 +755,38 @@ public static class HutTradeManager
 
         var result = await cmd.ExecuteScalarAsync();
         return result != null ? (long)result : 0;
+    }
+    
+    public static async Task HardDeleteTrade(long tradeId)
+    {
+        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+        await conn.OpenAsync();
+    
+        await using var trans = await conn.BeginTransactionAsync();
+
+        try
+        {
+            const string sqlOffers = "DELETE FROM hut_offer_info WHERE trade_id = @tid";
+            await using (var cmdOffers = new NpgsqlCommand(sqlOffers, conn, trans))
+            {
+                cmdOffers.Parameters.AddWithValue("tid", tradeId);
+                await cmdOffers.ExecuteNonQueryAsync();
+            }
+
+            const string sqlTrade = "DELETE FROM hut_trade_info WHERE trade_id = @tid";
+            await using (var cmdTrade = new NpgsqlCommand(sqlTrade, conn, trans))
+            {
+                cmdTrade.Parameters.AddWithValue("tid", tradeId);
+                await cmdTrade.ExecuteNonQueryAsync();
+            }
+
+            await trans.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
     }
 
     public static async Task<long> ActiveOffersCount(long tradeId)

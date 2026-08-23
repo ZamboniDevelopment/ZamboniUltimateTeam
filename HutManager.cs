@@ -156,37 +156,75 @@ public static class HutManager
 
     private static int chngDebugCounter = 0;
 
-    public static async Task<SquadInfo?> GetSquadInfo(long userId)
+    public static async Task<List<SquadInfo>> GetSquadList(long userId)
     {
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
-        const string sql = "SELECT * FROM hut_squad_info WHERE user_id = @user_id;";
+        List<SquadInfo> squadList = new();
+
+        const string sql = @"
+            SELECT squad_id 
+            FROM hut_squad_info 
+            WHERE user_id = @user_id 
+            ORDER BY active DESC;";
 
         await using var cmd = new NpgsqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("user_id", userId);
 
         await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            SquadInfo? squadInfo = await GetSquad(userId, reader.GetInt32(reader.GetOrdinal("squad_id")), false);
+            if (squadInfo != null) squadList.Add(squadInfo.Value);
+        }
 
+        return squadList;
+    }
+
+    public static async Task<SquadInfo?> GetSquad(long userId, int squadId, bool makeActive)
+    {
+        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+        await conn.OpenAsync();
+
+        const string sql = @"
+            WITH updated AS (
+                UPDATE hut_squad_info
+                SET active = (squad_id = @squad_id)
+                WHERE user_id = @user_id
+                AND @make_active = true
+            )
+            SELECT s.*, g.team_abbreviation 
+            FROM hut_squad_info AS s 
+            INNER JOIN hut_gamer_info AS g ON s.user_id = g.user_id 
+            WHERE s.user_id = @user_id
+            AND s.squad_id = @squad_id;";
+
+        await using var cmd = new NpgsqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("user_id", userId);
+        cmd.Parameters.AddWithValue("squad_id", squadId);
+        cmd.Parameters.AddWithValue("make_active", makeActive);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
-            List<CardData> playersOrdered = new List<CardData>();
-            foreach (var cardId in reader.GetFieldValue<List<long>>(reader.GetOrdinal("players")))
-            {
-                playersOrdered.Add((await GetCard(cardId, userId)).Card);
-            }
+            var playerIds = reader.GetFieldValue<List<long>>(reader.GetOrdinal("players"));
 
-            return new SquadInfo
+            var playersOrdered = (await Task.WhenAll(
+                playerIds.Select(cardId => GetCard(cardId, userId, DeckType.CARDHOUSE_DECK_STICKERBOOK))
+            )).Select(result => result.Card).ToList();
+
+            return new SquadInfo()
             {
                 mChemistry = (uint)reader.GetInt32(reader.GetOrdinal("chemistry")),
-                mCHNG = (uint)chngDebugCounter++,
+                mCHNG = 0,
                 mFormationId = (uint)reader.GetInt32(reader.GetOrdinal("formation_id")),
                 mLines = reader.GetFieldValue<int[]>(reader.GetOrdinal("lines")).ToList(),
                 mManager = (await GetCard(reader.GetInt64(reader.GetOrdinal("manager")))).Card,
                 mSquadName = reader.GetString(reader.GetOrdinal("squad_name")),
                 mPlayers = playersOrdered,
                 mStarRating = (uint)reader.GetInt32(reader.GetOrdinal("star_rating")),
-                mSquadId = (uint)reader.GetInt32(reader.GetOrdinal("squad_id"))
+                mSquadId = reader.GetInt32(reader.GetOrdinal("squad_id")),
             };
         }
 
@@ -307,7 +345,7 @@ public static class HutManager
     }
 
 
-    public static async Task<(CardData Card, DeckType DeckType)> GetCard(long cardId, long userId = 0)
+    public static async Task<(CardData Card, DeckType DeckType)> GetCard(long cardId, long userId = 0, DeckType? searchDeckType = null)
     {
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
@@ -318,10 +356,12 @@ public static class HutManager
         WHERE card_id = @card_id");
 
         if (userId != 0) sql.Append(" AND user_id = @user_id");
+        if (searchDeckType.HasValue) sql.Append(" AND deck_type = @search_deck_type");
 
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("card_id", cardId);
         if (userId != 0) cmd.Parameters.AddWithValue("user_id", userId);
+        if (searchDeckType.HasValue) cmd.Parameters.AddWithValue("search_deck_type", (int)searchDeckType);
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -333,7 +373,7 @@ public static class HutManager
             return (card, deckType);
         }
 
-        return (new CardData(), DeckType.CARDHOUSE_DECK_GENERAL);
+        return (new CardData(), DeckType.CARDHOUSE_DECK_INVALID);
     }
 
     public static async Task<(CardData Card, DeckType DeckType)> GetCard(uint cardDbId, long userId = 0)
@@ -342,9 +382,9 @@ public static class HutManager
         await conn.OpenAsync();
 
         var sql = new StringBuilder(@"
-            SELECT *, deck_type 
+            SELECT * 
             FROM hut_cards
-            WHERE card_id = @card_id");
+            WHERE db_id = @db_id");
 
         if (userId != 0) sql.Append(" AND user_id = @user_id");
 
@@ -365,44 +405,52 @@ public static class HutManager
         return (new CardData(), DeckType.CARDHOUSE_DECK_GENERAL);
     }
 
-    public static async Task SetSquadInfo(SquadSaveRequest request, long userId)
+    public static async Task<int> SaveSquadInfo(SquadSaveRequest request, long userId)
     {
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
 
-        const string sql = @"
-        INSERT INTO hut_squad_info (
-            user_id, chemistry, formation_id, lines, 
-            manager, squad_name, players, star_rating, squad_id
-        ) 
-        VALUES (
-            @user_id, @chemistry, @formation_id, @lines, 
-            @manager, @squad_name, @players, @star_rating, @squad_id
-        )
-        ON CONFLICT (user_id) DO UPDATE SET
-            user_id = EXCLUDED.user_id,
-            chemistry = EXCLUDED.chemistry,
-            formation_id = EXCLUDED.formation_id,
-            lines = EXCLUDED.lines,
-            manager = EXCLUDED.manager,
-            squad_name = EXCLUDED.squad_name,
-            players = EXCLUDED.players,
-            star_rating = EXCLUDED.star_rating,
-            squad_id = EXCLUDED.squad_id;";
-
-        await using var cmd = new NpgsqlCommand(sql, conn);
-
+        await using var cmd = new NpgsqlCommand();
+        cmd.Connection = conn;
         cmd.Parameters.AddWithValue("user_id", userId);
+
+        string squadIdValue = request.mSquadId == 0 ? "DEFAULT" : "@squad_id";
+
+        cmd.CommandText = $@"
+            INSERT INTO hut_squad_info (
+                squad_id, user_id, chemistry, formation_id, lines, 
+                manager, squad_name, players, star_rating, active
+            )
+            VALUES (
+                {squadIdValue}, @user_id, @chemistry, @formation_id, @lines, 
+                @manager, @squad_name, @players, @star_rating,
+                NOT EXISTS (SELECT 1 FROM hut_squad_info WHERE user_id = @user_id)
+            )
+            ON CONFLICT (squad_id) DO UPDATE SET
+                chemistry    = EXCLUDED.chemistry,
+                formation_id = EXCLUDED.formation_id,
+                lines        = EXCLUDED.lines,
+                manager      = EXCLUDED.manager,
+                squad_name   = EXCLUDED.squad_name,
+                players      = EXCLUDED.players,
+                star_rating  = EXCLUDED.star_rating
+            WHERE hut_squad_info.user_id = @user_id
+            RETURNING squad_id";
+
+        if (request.mSquadId != null && request.mSquadId != 0) cmd.Parameters.AddWithValue("squad_id", request.mSquadId);
         cmd.Parameters.AddWithValue("chemistry", (int)request.mChemistry);
         cmd.Parameters.AddWithValue("formation_id", (int)request.mFormation);
         cmd.Parameters.AddWithValue("lines", request.mLines);
         cmd.Parameters.AddWithValue("manager", request.mManager);
         cmd.Parameters.AddWithValue("squad_name", request.mSquadName);
-        cmd.Parameters.AddWithValue("players", request.mPlayers);
+        cmd.Parameters.AddWithValue("players", request.mPlayers != null ? request.mPlayers : new List<long>(new long[31]));
         cmd.Parameters.AddWithValue("star_rating", (int)request.mStarRating);
-        cmd.Parameters.AddWithValue("squad_id", (int)request.mSquadId);
 
-        await cmd.ExecuteNonQueryAsync();
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        await reader.ReadAsync();
+
+        return reader.GetInt32(reader.GetOrdinal("squad_id"));
     }
 
     public static async Task<Dictionary<int, int>> GetTeamCardCountsAsync(long userId, int leagueId, DeckType deckType, params CardSubType[] subTypes)
@@ -528,30 +576,39 @@ public static class HutManager
         sql.Append(" AND h.deck_type = @deck_type");
         switch (request.mCollectionSearchCardType)
         {
-            //Here we might have to filter based if its in players active roster (SquadInfo)
-            //but seems it's not needed because client has up-to-date info on his Squad all the time,
-            //and client doesn't mind sending him again his whole sticker book
             case CollectionSearchType.COLLECTION_SEARCH_TYPE_ALL: break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_HEADCOACH: sql.Append(" AND sub_type = 6"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_BADGE: sql.Append(" AND sub_type = 12"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_STADIUM: sql.Append(" AND sub_type = 11"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_C: sql.Append(" AND sub_type = 0"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_LW: sql.Append(" AND sub_type = 1"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_RW: sql.Append(" AND sub_type = 2"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_DEFENDER: sql.Append(" AND sub_type = 3"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_GK: sql.Append(" AND sub_type = 4"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL: sql.Append(" AND sub_type BETWEEN 0 AND 4"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER: sql.Append(" AND sub_type BETWEEN 0 AND 4"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT: sql.Append(" AND (sub_type BETWEEN 51 AND 62 OR sub_type = 201)"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_OFFLINE_TROPHY: sql.Append(" AND sub_type = 145"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_ONLINE_TROPHY: sql.Append(" AND sub_type = 146"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_LIVE_TROPHY: sql.Append(" AND sub_type = 147"); break;
-            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYOFF_TROPHY: sql.Append(" AND sub_type = 148"); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_HEADCOACH: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_BADGE: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_STADIUM: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_C: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_LW: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LW); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_RW: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RW); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_DEFENDER: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_GK: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_GK); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL: sql.Append(" AND sub_type = ANY(@fieldPlayerTypes)"); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER: sql.Append(" AND sub_type = ANY(@playerTypes)"); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT: sql.Append(" AND sub_type = ANY(@consumableTypes)"); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_OFFLINE_TROPHY: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_OFFLINE); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_ONLINE_TROPHY: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_ONLINE); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_LIVE_TROPHY: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_LIVE); break;
+            case CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYOFF_TROPHY: sql.Append(" AND sub_type = " + (int)CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_PLAYOFF); break;
             default: throw new NotImplementedException();
+        }
+
+        if (request.mCardState != null)
+        {
+            switch (request.mCardState)
+            {
+                case CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE: sql.Append(" AND state_id = ANY(@activeStates)"); break;
+            }
         }
 
         if (request.mLeagueId >= 0) sql.Append(" AND l.leagueid = @league_id");
         if (request.mTeamId >= 0) sql.Append(" AND h.team_id = @team_id");
+
+        sql.Append(" ORDER BY rating DESC");
+        if (request.mNumRetrieve > 0) sql.Append(" LIMIT " + request.mNumRetrieve);
+        if (request.mStart > 0) sql.Append(" OFFSET " + request.mStart);
 
         await using var cmd = new NpgsqlCommand(sql.ToString(), conn);
         cmd.Parameters.AddWithValue("user_id", userId);
@@ -559,6 +616,10 @@ public static class HutManager
 
         if (request.mLeagueId >= 0) cmd.Parameters.AddWithValue("league_id", request.mLeagueId);
         if (request.mTeamId >= 0) cmd.Parameters.AddWithValue("team_id", request.mTeamId);
+        if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_DEVELOPMENT) cmd.Parameters.AddWithValue("consumableTypes", CardHouseComponent.ConsumablesTypes.Select(x => (int)x).ToArray());
+        if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER) cmd.Parameters.AddWithValue("playerTypes", CardHouseComponent.PlayerTypes.Select(x => (int)x).ToArray());
+        if (request.mCollectionSearchCardType == CollectionSearchType.COLLECTION_SEARCH_TYPE_PLAYER_ALL) cmd.Parameters.AddWithValue("fieldPlayerTypes", CardHouseComponent.FieldPlayerTypes.Select(x => (int)x).ToArray());
+        if (request.mCardState != null && request.mCardState == CardState.CARDHOUSE_CARDSTATE_SEARCH_ACTIVE) cmd.Parameters.AddWithValue("activeStates", CardHouseComponent.ActiveStates.Select(x => (int)x).ToArray());
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -582,14 +643,31 @@ public static class HutManager
 
         await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
         await conn.OpenAsync();
-    
+
         await using var cmd = new NpgsqlCommand(query, conn);
         cmd.Parameters.AddWithValue("teamName", teamName);
-    
+
         var count = (long)(await cmd.ExecuteScalarAsync())!;
         return count == 0;
     }
-    
+
+    public static async Task<bool> IsFirstTeam(long userId)
+    {
+        const string query = @"
+            SELECT COUNT(*) 
+            FROM hut_name_reservations
+            WHERE user_id = @user_id";
+
+        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+        await conn.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("user_id", userId);
+
+        var count = (long)(await cmd.ExecuteScalarAsync())!;
+        return count <= 1;
+    }
+
     public static async Task InsertNameReservation(long userId, string userName, string teamName, string teamAbbreviation)
     {
         const string query = @"
@@ -607,7 +685,7 @@ public static class HutManager
 
         await cmd.ExecuteNonQueryAsync();
     }
-    
+
     public static async Task MarkTeamNameAsDeleted(string teamName)
     {
         const string query = @"
@@ -654,7 +732,7 @@ public static class HutManager
             throw;
         }
     }
-    
+
     private static async Task DeleteCard(long userId, long cardId, NpgsqlConnection conn, NpgsqlTransaction tx)
     {
         const string deleteCard = "DELETE FROM hut_cards WHERE card_id = @cardId AND user_id = @userId";
@@ -664,7 +742,7 @@ public static class HutManager
         cmd.Parameters.AddWithValue("userId", userId);
         await cmd.ExecuteNonQueryAsync();
     }
-    
+
     private static async Task<bool> CanDeleteUser(long userId, NpgsqlConnection conn, NpgsqlTransaction tx)
     {
         const string activeTradeQuery = @"
@@ -690,9 +768,10 @@ public static class HutManager
             var count = (long)(await cmd.ExecuteScalarAsync())!;
             if (count > 0) return false;
         }
+
         return true;
     }
-    
+
     private static async Task DeleteUser(long userId, NpgsqlConnection conn, NpgsqlTransaction tx)
     {
         string? teamName = await GetTeamName(userId, conn, tx);

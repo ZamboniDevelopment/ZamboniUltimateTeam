@@ -12,7 +12,7 @@ public struct ISGetOffersRequest
     public uint mNonActive;
     
     [TdfMember("NUMR")] 
-    public uint mNumRetrieve;
+    public int mNumRetrieve;
     
     [TdfMember("STRT")] 
     public uint mStart;

@@ -1,75 +1,141 @@
+using NLog;
+using Npgsql;
+using ZamboniUltimateTeam.Config;
 using ZamboniUltimateTeam.Structs;
 
-namespace ZamboniUltimateTeam;
-
-public static class HutPackFactory
+namespace ZamboniUltimateTeam
 {
-    public static async Task<List<CardData>> CreatePack(long userId, PackType packType)
+    public static class HutPackFactory
     {
-        var cardDataList = new List<CardData>();
-        await HutManager.IncrementVersionInfo(userId, HutManager.VersionType.Unassigned);
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        switch (packType)
+        private static readonly Dictionary<string, (string Table, CardSubType? SubType)> CardTypeTableMap = new()
         {
-            case PackType.CARDHOUSE_CARD_PACK_TYPE_STARTER:
+            { "Badge", ("fcc_badges", CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE) },
+            { "Contract", ("fcc_contractcards", CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER) },
+            { "Kit", ("fcc_kitcards", null) },
+            { "Player", ("fcc_playercards", null) },
+            { "Stadium", ("fcc_stadium", CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM) },
+            { "Training", ("fcc_trainingcards", null) },
+            { "Coach", ("fcc_headcoachcards", CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH) },
+        };
+
+        public static async Task<List<CardData>> RollPackAsync(Pack pack, long userId)
+        {
+            var results = new List<CardData>();
+            var categoryCounts = new Dictionary<string, int>();
+
+            foreach (var cardSpec in pack.Loot.Guaranteed)
             {
-                cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId, true, false));
-                cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId, false, false));
-
-                cardDataList.Add(await HutCardFactory.CreateRandomLogoCard(userId));
-
-                cardDataList.Add(await HutCardFactory.CreateRandomStadiumCard(userId));
-
-                cardDataList.Add(await HutCardFactory.CreateRandomTrainingCard(userId));
-
-                cardDataList.Add(await HutCardFactory.CreateRandomContractCard(userId));
-
-                var starterOverallRange = new Range(0, 85);
-
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_GK));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_GK));
-
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D));
-
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LW));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LW));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LW));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LW));
-
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(78, 82), true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, new Range(80, 84), true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C));
-
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RW));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RW));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RW));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RW));
-
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C));
-                cardDataList.Add(await HutCardFactory.RollPlayerCard(userId, cardDataList, starterOverallRange, true, CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C));
-
-                return cardDataList;
+                for (int i = 0; i < cardSpec.Count; i++)
+                {
+                    results.Add(await RollCard(userId, cardSpec.CardType, cardSpec.Filters, results));
+                }
             }
-            case PackType.CARDHOUSE_CARD_PACK_TYPE_PEEWEE:
+
+            foreach (var randomizedCategory in pack.Loot.Randomized)
             {
-                cardDataList.Add(await HutCardFactory.CreatePlayerCard(userId, 3673));
-                cardDataList.Add(await HutCardFactory.CreateNonPlayerCard(userId, 6300004, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT));
-                cardDataList.Add(await HutCardFactory.CreateRandomJerseyCard(userId, false, false));
-                cardDataList.Add(await HutCardFactory.CreateNonPlayerCard(userId, 5003004, CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_HIGH));
-                cardDataList.Add(await HutCardFactory.CreateRandomLogoCard(userId));
-                cardDataList.Add(await HutCardFactory.CreateRandomContractCard(userId));
-                cardDataList.Add(await HutCardFactory.CreateRandomStadiumCard(userId));
-                cardDataList.Add(await HutCardFactory.CreateRandomHeadCoachCard(userId));
+                for (int i = 0; i < randomizedCategory.Count; i++)
+                {
+                    CardSpec item;
+                    do
+                    {
+                        item = PickWeightedItem(randomizedCategory);
+                    } while (pack.Loot.Limits.TryGetValue(item.CardType, out int limit) && categoryCounts.GetValueOrDefault(item.CardType) >= limit);
 
-                return cardDataList;
+                    var result = await RollCard(userId, item.CardType, item.Filters, results);
+                    categoryCounts[item.CardType] = categoryCounts.GetValueOrDefault(item.CardType) + 1;
+                    results.Add(result);
+                }
             }
-            default: throw new NotImplementedException();
+
+            results.Sort((_, _) => Random.Shared.Next(-1, 2));
+            return results;
+        }
+
+        private static CardSpec PickWeightedItem(RandomizedCategory pool)
+        {
+            float roll = (float)(Random.Shared.NextDouble() * pool.Weights.Values.Sum());
+
+            foreach (var item in pool.Items)
+            {
+                roll -= pool.Weights[item.Category!];
+                if (roll < 0)
+                    return item;
+            }
+
+            return pool.Items.Last();
+        }
+
+        private static async Task<CardData> RollCard(long userId, string cardType, Filters? filters, List<CardData> alreadyRolled)
+        {
+            if (!CardTypeTableMap.TryGetValue(cardType, out var table)) throw new Exception($"Card type: {cardType} not mapped to a table");
+
+            var query = BuildQuery(table.Table, filters);
+
+            uint dbId;
+            do
+            {
+                await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
+                await conn.OpenAsync();
+                await using var cmd = new NpgsqlCommand(query, conn);
+                var result = await cmd.ExecuteScalarAsync();
+                if (result is null) throw new Exception("Roll returned 0 available matches");
+                dbId = Convert.ToUInt32(result);
+            } while (!CanHaveDuplicatesInSamePack(cardType) && alreadyRolled.Any(card => card.mCardDbId == dbId));
+
+            if (cardType.Equals("Player"))
+            {
+                return await HutCardFactory.CreatePlayerCard(userId, dbId);
+            }
+
+            CardSubType? subType = CardTypeTableMap[cardType].SubType;
+            if (subType.HasValue)
+            {
+                return await HutCardFactory.CreateNonPlayerCard(userId, dbId, subType.Value);
+            }
+
+            if (cardType.Equals("Training"))
+            {
+                var trainingCard = await UltimateDatabase.GetTrainingCardByDbIdAsync(dbId);
+                return await HutCardFactory.CreateNonPlayerCard(userId, dbId, (CardSubType)trainingCard.CardSubType);
+            }
+
+            if (cardType.Equals("Kit"))
+            {
+                var kitCard = await UltimateDatabase.GetKitCardByDbIdAsync(dbId);
+                return await HutCardFactory.CreateNonPlayerCard(userId, dbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT, (byte)(kitCard.IsAway ? 1 : 0));
+            }
+
+            throw new Exception();
+        }
+
+        private static bool CanHaveDuplicatesInSamePack(string cardType)
+        {
+            return cardType.Equals("Contract") || cardType.Equals("Healing") || cardType.Equals("Training");
+        }
+
+        private static string BuildQuery(string table, Filters? filters)
+        {
+            var clauses = new List<string>();
+
+            if (filters != null)
+            {
+                if (filters.Rating != null) clauses.Add($"rating >= {filters.Rating.RangeStart} AND rating <= {filters.Rating.RangeEnd}");
+                if (filters.ZRating != null) clauses.Add($"zrating >= {filters.ZRating.RangeStart} AND zrating <= {filters.ZRating.RangeEnd}");
+                if (filters.Zcat != null) clauses.Add($"zcat >= {filters.Zcat.RangeStart} AND zcat <= {filters.Zcat.RangeEnd}");
+                if (filters.Rare.HasValue) clauses.Add($"rare = {filters.Rare.Value}");
+                if (filters.ZVictory.HasValue) clauses.Add($"zvictory = {filters.ZVictory.Value}");
+                if (filters.ZLegendary.HasValue) clauses.Add($"zlegendary = {filters.ZLegendary.Value}");
+                if (filters.IsAway.HasValue) clauses.Add($"isaway = {filters.IsAway.Value}");
+                if (filters.Alternative.HasValue) clauses.Add($"alternative = {filters.Alternative.Value}");
+                if (filters.PreferredPosition.HasValue) clauses.Add($"preferredposition = {filters.PreferredPosition.Value}");
+            }
+
+            var where = clauses.Count > 0 ? "WHERE " + string.Join(" AND ", clauses) : "";
+            var query = $"SELECT carddbid FROM {table} {where} ORDER BY RANDOM() LIMIT 1";
+            Logger.Debug("RollQuery " + query);
+            return query;
         }
     }
 }

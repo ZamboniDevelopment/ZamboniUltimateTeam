@@ -1,4 +1,5 @@
 using Tdf;
+using ZamboniUltimateTeam.Structs;
 
 namespace ZamboniUltimateTeam.Requests;
 

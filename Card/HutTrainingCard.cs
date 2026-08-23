@@ -3,7 +3,7 @@ namespace ZamboniUltimateTeam.Card;
 public class HutTrainingCard
 {
     public uint CardDbId { get; set; }
-    public int CardSubtype { get; set; }
+    public int CardSubType { get; set; }
     public int WeightRare { get; set; }
     public int CardAssetId { get; set; }
     public string Description { get; set; }

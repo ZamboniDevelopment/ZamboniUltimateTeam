@@ -6,121 +6,7 @@ namespace ZamboniUltimateTeam;
 
 public static class HutCardFactory
 {
-    private static readonly Random Random = new();
-
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    public static async Task<CardData> CreateRandomHeadCoachCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_headcoachcards");
-        var cardDbId = list[Random.Next(list.Count)];
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH);
-    }
-
-    public static async Task<CardData> CreateRandomContractCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_contractcards");
-        var cardDbId = list[Random.Next(list.Count)];
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER);
-    }
-
-    public static async Task<CardData> CreateRandomTrainingCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_trainingcards");
-        var cardDbId = list[Random.Next(list.Count)];
-        var trainingCard = await UltimateDatabase.GetTrainingCardByDbIdAsync((uint)cardDbId);
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, (CardSubType)trainingCard.CardSubtype);
-    }
-
-    public static async Task<CardData> CreateRandomLogoCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_badges");
-        var cardDbId = list[Random.Next(list.Count)];
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE);
-    }
-
-    public static async Task<CardData> CreateRandomStadiumCard(long owner)
-    {
-        var list = await HutHelper.GetAllDistinctCardDbIds("fcc_stadium");
-        var cardDbId = list[Random.Next(list.Count)];
-        return await CreateNonPlayerCard(owner, (uint)cardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM);
-    }
-
-    public static async Task<CardData> CreateRandomJerseyCard(long owner, bool? isAway = null, bool? isRare = null)
-    {
-        var cardDbIds = await UltimateDatabase.GetKitCards(isAway, isRare);
-        var kit = cardDbIds[Random.Next(cardDbIds.Count)];
-        return await CreateNonPlayerCard(owner, kit.CardDbId, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT, (byte)(kit.IsAway ? 1 : 0));
-    }
     
-    public static async Task<CardData> RollPlayerCard(long owner, List<CardData> alreadyRolled, Range overall, bool guaranteeUnique, params CardSubType[] subTypes)
-    {
-        int[] excludeIds = alreadyRolled.Select(c => (int)c.mCardDbId).ToArray();
-
-        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
-        await conn.OpenAsync();
-
-        var possibilities = new List<uint>();
-
-        string sql = @"
-            SELECT carddbid 
-            FROM fcc_playercards p
-            WHERE preferredposition = ANY(@subTypes) 
-            AND rating >= @overallStart AND rating <= @overallEnd 
-            AND NOT (carddbid = ANY(@excludeIds))
-            AND (@guaranteeUnique = FALSE OR NOT EXISTS (
-                SELECT 1 FROM hut_cards h 
-                WHERE h.user_id = @owner AND h.db_id = p.carddbid AND deck_type != 6
-            ))";
-
-        await using var cmd = new NpgsqlCommand(sql, conn);
-        cmd.Parameters.AddWithValue("subTypes", subTypes.Select(type => (int)type).ToArray());
-        cmd.Parameters.AddWithValue("overallStart", overall.Start.Value);
-        cmd.Parameters.AddWithValue("overallEnd", overall.End.Value);
-        cmd.Parameters.AddWithValue("excludeIds", excludeIds);
-        cmd.Parameters.AddWithValue("owner", owner);
-        cmd.Parameters.AddWithValue("guaranteeUnique", guaranteeUnique);
-
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            possibilities.Add((uint)reader.GetInt32(0));
-        }
-
-        if (possibilities.Count == 0)
-        {
-            if (overall.End.Value <= 1) return await RollPlayerCard(owner, alreadyRolled, new Range(0, 100), false, subTypes);
-
-            return await RollPlayerCard(owner, alreadyRolled, new Range(overall.Start.Value - 1, overall.End.Value - 1), guaranteeUnique, subTypes);
-        }
-
-        return await CreatePlayerCard(owner, possibilities[Random.Next(possibilities.Count)]);
-    }
-
-    public static async Task<int> TeamIdFromDbId(uint dbId)
-    {
-        await using var conn = new NpgsqlConnection(UltimateDatabase.ConnectionString);
-        await conn.OpenAsync();
-
-        const string sql = @"
-        SELECT teamid FROM fcc_badges WHERE carddbid = @carddbid
-        UNION ALL
-        SELECT teamid FROM fcc_kitcards WHERE carddbid = @carddbid
-        LIMIT 1;";
-
-        await using var cmd = new NpgsqlCommand(sql, conn);
-        cmd.Parameters.AddWithValue("carddbid", (int)dbId);
-
-        var result = await cmd.ExecuteScalarAsync();
-
-        if (result != null && result != DBNull.Value)
-        {
-            return Convert.ToInt32(result);
-        }
-
-        return 0;
-    }
-
     public static async Task<CardData> CreateNonPlayerCard(long owner, uint dbId, CardSubType cardSubType, byte formationId = 0)
     {
         CardState cardState = CardState.CARDHOUSE_CARDSTATE_FREE;
@@ -144,16 +30,16 @@ public static class HutCardFactory
             mMaxTrainingCardsCanApply = 0,
             mNumberOfOwners = 0,
             mPreferredPositionId = (byte)cardSubType,
-            mDiscardPrice = 100,
+            mDiscardPrice = 0,
             mRareFlag = 0,
             mRating = 0,
             mSalaryCap = 0,
             mListStats = new List<int>(),
             mCardSubTypeId = cardSubType,
-            mDateIssued = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
-            mTeamId = (uint)await TeamIdFromDbId(dbId),
+            mDateIssued = UltimateTeam.TimeNowSeconds(),
+            mTeamId = (uint)await UltimateDatabase.TeamIdFromDbId(dbId),
             mListTrainingCards = new List<int>(),
-            mUsesRemaining = 0
+            mUsesRemaining = (byte)(CardHouseComponent.TrophyTypes.Contains(cardSubType) ? 1 : 0)
         };
         return await CreateOrUpdateCard(cardData, owner, deckType);
     }
@@ -177,7 +63,7 @@ public static class HutCardFactory
         INSERT INTO hut_cards (
             card_id, user_id, attributes, state_id, db_id, formation_id, 
             free, career_remaining, injury_games, injury_type, 
-            morale, preferred_position_id, discard_price, 
+            morale, owners, preferred_position_id, discard_price, 
             rare_flag, rating, salary_cap,
             list_stats, sub_type, date_issued,
             team_id, list_training_cards, uses_remaining
@@ -186,7 +72,7 @@ public static class HutCardFactory
         VALUES (
             {cardIdValue}, @user_id, @attributes, @state_id, @db_id, @formation_id, 
             @free, @career_remaining, @injury_games, @injury_type, 
-            @morale, @preferred_position_id, @discard_price, 
+            @morale, @owners, @preferred_position_id, @discard_price, 
             @rare_flag, @rating, @salary_cap,
             @list_stats, @sub_type, @date_issued, @team_id, @list_training_cards, 
             @uses_remaining
@@ -203,6 +89,7 @@ public static class HutCardFactory
             injury_games = EXCLUDED.injury_games,
             injury_type = EXCLUDED.injury_type,
             morale = EXCLUDED.morale,
+            owners = EXCLUDED.owners,
             preferred_position_id = EXCLUDED.preferred_position_id,
             discard_price = EXCLUDED.discard_price,
             rare_flag = EXCLUDED.rare_flag,
@@ -230,6 +117,7 @@ public static class HutCardFactory
         cmd.Parameters.AddWithValue("injury_games", (short)cardData.mInjuryGames);
         cmd.Parameters.AddWithValue("injury_type", (short)cardData.mInjuryType);
         cmd.Parameters.AddWithValue("morale", (short)cardData.mMaxTrainingCardsCanApply);
+        cmd.Parameters.AddWithValue("owners", (short)cardData.mNumberOfOwners);
         cmd.Parameters.AddWithValue("preferred_position_id", (int)cardData.mPreferredPositionId);
         cmd.Parameters.AddWithValue("discard_price", (int)cardData.mDiscardPrice);
         cmd.Parameters.AddWithValue("rare_flag", (int)cardData.mRareFlag);
@@ -238,7 +126,7 @@ public static class HutCardFactory
         cmd.Parameters.AddWithValue("list_stats", cardData.mListStats.ToArray());
         cmd.Parameters.AddWithValue("list_training_cards", cardData.mListTrainingCards.ToArray());
         cmd.Parameters.AddWithValue("sub_type", (int)cardData.mCardSubTypeId);
-        cmd.Parameters.AddWithValue("date_issued", (long)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+        cmd.Parameters.AddWithValue("date_issued", (long)UltimateTeam.TimeNowSeconds());
         cmd.Parameters.AddWithValue("team_id", (int)cardData.mTeamId);
         cmd.Parameters.AddWithValue("uses_remaining", (int)cardData.mUsesRemaining);
         if (updateDeck)

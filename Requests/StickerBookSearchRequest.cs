@@ -28,7 +28,7 @@ public struct StickerBookSearchRequest
     public int mNation;
     
     [TdfMember("NUMR")] 
-    public int mNumRetreive;
+    public int mNumRetrieve;
     
     [TdfMember("POS")] 
     public int mPosition;

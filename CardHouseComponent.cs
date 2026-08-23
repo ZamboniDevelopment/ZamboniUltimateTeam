@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Blaze3SDK;
 using BlazeCommon;
 using ZamboniUltimateTeam.Requests;
@@ -114,24 +115,34 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
         var generalInfo = await HutManager.GetGeneralInfo(userId);
         if (generalInfo == null)
+        {
+            int credits = 0;
+            if (await HutManager.IsFirstTeam(userId)) credits = 1000;
             generalInfo = await HutManager.SetGeneralInfo(new GeneralInfo
             {
-                mCredits = 1000,
+                mCredits = credits,
                 mStats = new List<int>()
                 {
-                    //Todo figure if other placeholders have meaning
-                    1, 2, 3, 4, 5, 6, 7, 8,
-                    0, //WINS
-                    0, //LOSES
-                    0, //OTL
-                    12, 13, 14, 15, 16, 17, 18, 19, 20,
-                    21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+                    0, //CARDHOUSE_GIS_BRONZE_PACK_BOUGHT
+                    0, //CARDHOUSE_GIS_SILVER_PACK_BOUGHT
+                    0, //CARDHOUSE_GIS_GOLD_PACK_BOUGHT
+                    0, //CARDHOUSE_GIS_GAMES_PLAYED
+                    0, //CARDHOUSE_GIS_CUPS_WON
+                    0, //CARDHOUSE_GIS_RESERVED_X
+                    0, //CARDHOUSE_GIS_RESERVED_Y
+                    (int)UltimateTeam.TimeNowSeconds(), //CARDHOUSE_GIS_EST_DATE
+                    0, //CARDHOUSE_GIS_GAMES_WON
+                    0, //CARDHOUSE_GIS_GAMES_LOST
+                    0, //CARDHOUSE_GIS_GAMES_DRAW
+                    0, //CARDHOUSE_GIS_PLAYER_CARDS
+                    0, //CARDHOUSE_GIS_NUM_STATS
                 }
             }, userId);
+        }
 
-        var squadInfo = await HutManager.GetSquadInfo(userId);
+        var squadInfoList = await HutManager.GetSquadList(userId);
         uint teamRating = 0;
-        if (squadInfo != null) teamRating = squadInfo.Value.mStarRating;
+        if (squadInfoList.Count >= 1) teamRating = squadInfoList[0].mStarRating;
 
         var versionInfo = await HutManager.GetVersionInfo(userId);
         if (versionInfo == null)
@@ -166,77 +177,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         return new GetConfigResponse
         {
-            mConfigList = new List<int>
-            {
-                //Todo figure if other placeholders have meaning
-                11, 21, 22, 33, 44, 55, 66, 77, 88, 99, 10,
-                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                21, 22, 23, 24, 25, 26, 27,
-                100, //Game End: Completion award
-                29,
-                50, //Game End Positive: Pucks per Goal
-                31,
-                5, //Game End Positive: Pucks per Shots on goal
-                33,
-                5, //Game End Positive: Pucks per Hits
-                35,
-                5, //Game End Positive: Pucks per Faceoffs Won
-                37,
-                20, //Game End Positive: Pucks per Time on attack MINUTES
-                39,
-                1, //Game End Positive: Pucks per Powerplay % something?
-                41,
-                5, //Game End Positive: Pucks per successful pass
-                43,
-                -50, //Game End Negative: Puck deduction per opponent goals
-                45,
-                -25, //Game End Negative: Puck deduction per penalty minute
-                47,
-                -25, //Game End Negative: Puck deduction per icing
-                49,
-                -10, //Game End Negative: Puck deduction per offside
-                51,
-                50, //Bid increment
-                53,
-                54,
-                55,
-                56,
-                10, //Difficulty Rookie Multiplier
-                10, //Difficulty Pro Multiplier
-                10, //Difficulty All-Star Multiplier
-                11, //Difficulty Super-Star Multiplier
-                61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
-                71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
-                81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
-                91, 92, 93, 94, 95, 96, 97, 98, 99, 100,
-                101, 102, 103, 104, 105, 106, 107, 108, 109, 110,
-                111, 112, 113, 114, 115, 116, 117, 118, 119, 120,
-                121, 122, 123, 124, 125, 126, 127, 128, 129, 130,
-                131, 132, 133, 134, 135, 136, 137, 138, 139, 140,
-                141, 142, 143, 144, 145, 146, 147, 148, 149, 150,
-                151, 152, 153, 154, 155, 156, 157, 158, 159, 160,
-                161, 162, 163, 164, 165, 166, 167, 168, 169, 170,
-                171, 172, 173, 174, 175, 176, 177, 178, 179, 180,
-                181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
-                191, 192, 193, 194, 195, 196, 197, 198, 199, 200,
-                201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
-                211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
-                221, 222, 223, 224, 225, 226, 227, 228, 229, 230,
-                231, 232, 233, 234, 235, 236, 237, 238, 239, 240,
-                241, 242, 243, 244, 245, 246, 247, 248, 249, 250,
-                251, 252, 253, 254, 255, 256, 257, 258, 259, 260,
-                261, 262, 263, 264, 265, 266, 267, 268, 269, 270,
-                271, 272, 273, 274, 275, 276, 277, 278, 279, 280,
-                281, 282, 283, 284, 285, 286, 287, 288, 289, 290,
-                291, 292, 293, 294, 295, 296, 297, 298, 299, 300,
-                301, 302, 303, 304, 305, 306, 307, 308, 309, 310,
-                311, 312, 313, 314, 315, 316, 317, 318, 319, 320,
-                321, 322, 323, 324, 325, 326, 327, 328, 329, 330,
-                331, 332, 333, 334, 335, 336, 337, 338, 339, 340,
-                341, 342, 343, 344, 345, 346, 347, 348, 349, 350,
-                351, 352, 353, 354, 355, 356, 357, 358, 359, 360,
-                361, 362, 363, 364, 365, 366, 367, 368, 369, 370,
-            }
+            mConfigList = UltimateTeam.HutConfig.Values
         };
     }
 
@@ -246,22 +187,8 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         {
             mFreePack = 0,
             mPremiumPacksHidden = 0,
-            mPackTypeList = new List<StorePackTypeData>()
-            {
-                new StorePackTypeData
-                {
-                    mAttributes = StorePackAttribute.CARDHOUSE_STOREPACKATTRIBUTES_SAVINGS_COINS,
-                    mAvailability = StorePackAvailability.CARDHOUSE_STOREPACKAVAILABILITY_COINS,
-                    mCoinCost = 1,
-                    mEndDate = 0,
-                    mId = StorePackId.CARDHOUSE_CARD_PACK_TYPE_PEEWEE,
-                    mQuantity = 0,
-                    mSaleType = StoreSaleType.CARDHOUSE_STORESALETYPE_NONE,
-                    mStartDate = 0,
-                    mState = StorePackState.CARDHOUSE_STOREPACKSTATE_ACTIVE
-                }
-            },
-            mServerTime = 0
+            mPackTypeList = UltimateTeam.PackConfig.Packs.Select(pack => pack.StorePackTypeData).ToList(),
+            mServerTime = UltimateTeam.TimeNowSeconds(),
         };
     }
 
@@ -336,12 +263,12 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<AssignCardsResponse> AssignCardsAsync(AssignCardsRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-        foreach (var assignCardCard in request.mList)
+        await Task.WhenAll(request.mList.Select(async assignCardCard =>
         {
             var cardData = (await HutManager.GetCard(assignCardCard.mCardId)).Card;
             cardData.mCardStateId = assignCardCard.mCardStateId;
             await HutCardFactory.CreateOrUpdateCard(cardData, userId, assignCardCard.mDeckType);
-        }
+        }));
 
         await HutManager.IncrementVersionInfo(userId, HutManager.VersionType.Unassigned);
         var versionInfo = await HutManager.GetVersionInfo(userId);
@@ -378,33 +305,29 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<SquadListResponse> GetSquadListAsync(NumericRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-        var squadInfo = await HutManager.GetSquadInfo(userId);
-        if (squadInfo == null) return new SquadListResponse();
-
+        var squadInfo = await HutManager.GetSquadList(userId);
+        if (squadInfo.Count <= 0) return new SquadListResponse();
+        var squadSmalls = squadInfo.Select(squadInfoS => new SquadSmall
+            {
+                mChemistry = squadInfoS.mChemistry,
+                mFormation = squadInfoS.mFormationId,
+                mRating = squadInfoS.mStarRating,
+                mSquadId = squadInfoS.mSquadId,
+                mSquadName = squadInfoS.mSquadName
+            })
+            .ToList();
         return new SquadListResponse
         {
-            mActiveSquad = 1,
-            mSquads = new List<SquadSmall>
-            {
-                new SquadSmall
-                {
-                    mChemistry = squadInfo.Value.mChemistry,
-                    mFormation = squadInfo.Value.mFormationId,
-                    mRating = squadInfo.Value.mStarRating,
-                    mSquadId = 0,
-                    mSquadName = squadInfo.Value.mSquadName
-                }
-            }
+            mActiveSquad = squadInfo[0].mSquadId,
+            mSquads = squadSmalls
         };
     }
 
     public override async Task<ViewCardsResponse> ViewCardsAsync(ViewCardsRequest request, BlazeRpcContext context)
     {
-        var cardDataList = new List<CardData>();
-        foreach (var cardId in request.mCardIdList)
-        {
-            cardDataList.Add((await HutManager.GetCard(cardId)).Card);
-        }
+        var cardDataList = (await Task.WhenAll(
+            request.mCardIdList.Select(cardId => HutManager.GetCard(cardId))
+        )).Select(result => result.Card).ToList();
 
         return new ViewCardsResponse
         {
@@ -415,10 +338,9 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<SquadSaveResponse> SquadSaveAsync(SquadSaveRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-        await HutManager.SetSquadInfo(request, userId);
         return new SquadSaveResponse
         {
-            mSquadId = request.mSquadId
+            mSquadId = await HutManager.SaveSquadInfo(request, userId)
         };
     }
 
@@ -431,6 +353,13 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_GK
     };
 
+    public static readonly CardSubType[] FieldPlayerTypes =
+    {
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_C,
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_LW,
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_RW,
+        CardSubType.CARDHOUSE_CARD_TYPE_PLAYER_D,
+    };
     public static readonly CardSubType[] TrophyTypes =
     {
         CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_OFFLINE,
@@ -438,15 +367,8 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_LIVE,
         CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_PLAYOFF,
     };
-    
-    public static readonly CardSubType[] TrainingTypes =
+    public static readonly CardSubType[] TrainingPlayerTypes =
     {
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_HIGH,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_LOW,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_QUICKNESS,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_POSITIONING,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_REBOUNDCONTROL,
-        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ALL,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_SKATING,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_SHOOTING,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_HANDS,
@@ -454,6 +376,30 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ATTRIBUTE_DEFENSE,
         CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_PLAYER_ALL,
     };
+    public static readonly CardSubType[] TrainingGoalieTypes =
+    {
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_HIGH,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_LOW,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_QUICKNESS,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_POSITIONING,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ATTRIBUTE_REBOUNDCONTROL,
+        CardSubType.CARDHOUSE_CARD_TYPE_TRAINING_GK_ALL,
+    };
+    public static readonly CardSubType[] TeamInformationTypes =
+    {
+        CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT,
+        CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE,
+    };
+    public static readonly CardState[] ActiveStates =
+    {
+        CardState.CARDHOUSE_CARDSTATE_ACTIVE_AWAY_KIT,
+        CardState.CARDHOUSE_CARDSTATE_ACTIVE_HOME_KIT,
+        CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE,
+        CardState.CARDHOUSE_CARDSTATE_ACTIVE_STADIUM,
+    };
+    public static readonly CardSubType[] TrainingTypes = TrainingPlayerTypes
+        .Concat(TrainingGoalieTypes)
+        .ToArray();
 
     public static readonly CardSubType[] ConsumablesTypes = TrainingTypes
         .Append(CardSubType.CARDHOUSE_CARD_TYPE_CONTRACT_PLAYER)
@@ -465,7 +411,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<StickerBookStats2Response> StickerBookStats2Async(StickerBookStats2Request request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-
+        // if (request.mBASE >= 1) throw new NotImplementedException();
         List<StickerBookStatResult> stats = new();
 
         if (request.mContextId == RequestContext.CARDHOUSE_STICKERBOOK_STATS_REQUEST_CONTEXT_TOP)
@@ -475,42 +421,42 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_PLAYERS,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,PlayerTypes)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, PlayerTypes)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_STAFF_HEADCOACH,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_STADIA,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_KITS,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_KIT)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_BADGES,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_BADGE)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 2,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_TROPHIES,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,TrophyTypes)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, TrophyTypes)
             });
         }
 
@@ -557,7 +503,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 12,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_STADIA,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_CUSTOM_STADIUM)
             });
 
             stats.Add(new StickerBookStatResult
@@ -565,7 +511,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 13,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_BALLS,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_STAFF_HEADCOACH)
             });
 
             stats.Add(new StickerBookStatResult
@@ -573,21 +519,21 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 14,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_TROPHIES_OFFLINE,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_OFFLINE)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_OFFLINE)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 14,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_TROPHIES_ONLINE,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_ONLINE)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_ONLINE)
             });
             stats.Add(new StickerBookStatResult
             {
                 mContextId = ResultContext.CARDHOUSE_STICKERBOOK_STAT_RESULT_CONTEXT_YEAR,
                 mContextValue = 14,
                 mTypeId = ResultType.CARDHOUSE_STICKERBOOK_STAT_RESULT_TYPE_TROPHIES_LIVE,
-                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null,CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_LIVE)
+                mValue = await HutManager.GetCardCountAsync(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, null, CardSubType.CARDHOUSE_CARD_TYPE_UNLOCKS_TROPHY_LIVE)
             });
             stats.Add(new StickerBookStatResult
             {
@@ -707,7 +653,7 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<StickerBookSearchResponse> StickerBookSearchAsync(StickerBookSearchRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-
+        // if (request.mBASE >= 1) throw new NotImplementedException();
         List<CardData> cardDatas = await HutManager.GetCardList(userId, request);
 
         return new StickerBookSearchResponse
@@ -864,10 +810,12 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
 
         var cardList = await HutManager.GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, request.mActiveState);
-        var previousActive = cardList[0];
-        previousActive.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
-
-        await HutCardFactory.CreateOrUpdateCard(previousActive, userId);
+        var previousActive = cardList.FirstOrDefault();
+        if (previousActive.mCardId != 0)
+        {
+            previousActive.mCardStateId = CardState.CARDHOUSE_CARDSTATE_FREE;
+            await HutCardFactory.CreateOrUpdateCard(previousActive, userId);
+        }
 
         var target = await HutManager.GetCard(request.mCardId, userId);
         target.Card.mCardStateId = request.mActiveState;
@@ -883,40 +831,12 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
     public override async Task<TournamentListResponse> TournamentListRequestAsync(NullStruct request, BlazeRpcContext context)
     {
-        List<TournamentInfo> tournamentInfos = new List<TournamentInfo>();
         //For now, we just do singleplayer tournaments
         //Multiplayer tournaments require some more effort to implement...
-        for (int i = 1; i <= 12; i++)
-        {
-            tournamentInfos.Add(new TournamentInfo
-            {
-                mAiGroup = 0,
-                mBlazeTournamentId = 0,
-                mDifficulty = (int)Math.Round((i - 1) * (5.0 / 11.0)),
-                mElg1Type = ElgType.ELG_NONE,
-                mElg1Data = 0,
-                mElg2Type = ElgType.ELG_NONE,
-                mElg12Data = 0,
-                mEndTime = 0,
-                mMatchLenght = 0,
-                mPrize = 1000 * i,
-                mReward1 = 1000,
-                mReward2 = 1000,
-                mReward3 = 1000,
-                mReward4 = 1000,
-                mSalaryCap = 2000,
-                mStartTime = 0,
-                mTrophyCardDbId = 8200000 + i - 1,
-                mTournamentId = i,
-                mType = 0,
-                mTrophiesRequiredToEnter = i - 1
-            });
-        }
-
         return new TournamentListResponse
         {
-            mServerTime = (uint)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
-            mTournaments = tournamentInfos
+            mServerTime = UltimateTeam.TimeNowSeconds(),
+            mTournaments = UltimateTeam.TournamentConfig.Tournaments.Select(tourney => tourney.TournamentInfo).ToList(),
         };
     }
 
@@ -954,24 +874,9 @@ public class CardHouseComponent : CardHouseComponentBase.Server
 
         switch (consumable.Card.mCardSubTypeId)
         {
-            case >= (CardSubType)51 and <= (CardSubType)62:
+            case var subtype when TrainingPlayerTypes.Contains(subtype) || TrainingGoalieTypes.Contains(subtype):
             {
                 var trainingCard = await UltimateDatabase.GetTrainingCardByDbIdAsync(consumable.Card.mCardDbId);
-                //This might not even be necessary for 1.0 clients
-                //Should then also calculate the overall column
-                // if (trainingCard.AttributeSlot == -1)
-                // {
-                //     updated.mAttributes[0] += (byte)trainingCard.Amount;
-                //     updated.mAttributes[1] += (byte)trainingCard.Amount;
-                //     updated.mAttributes[2] += (byte)trainingCard.Amount;
-                //     updated.mAttributes[3] += (byte)trainingCard.Amount;
-                //     updated.mAttributes[4] += (byte)trainingCard.Amount;
-                // }
-                // else
-                // {
-                //     updated.mAttributes[trainingCard.AttributeSlot] += (byte)trainingCard.Amount;
-                // }
-
                 updated.mListTrainingCards.Add(trainingCard.IndexedConsumableId);
                 break;
             }
@@ -1013,9 +918,20 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         };
     }
 
+    private ConcurrentDictionary<long, bool> _onlineGames = new();
 
     public override async Task<MatchRegisterStartResponse> MatchRegisterStartAsync(MatchRegisterStartRequest request, BlazeRpcContext context)
     {
+        var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
+        if (request.mOnlineGame == 1)
+        {
+            _onlineGames[userId] = true;
+        }
+        else
+        {
+            _onlineGames[userId] = false;
+        }
+
         return new MatchRegisterStartResponse();
     }
 
@@ -1028,20 +944,23 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
 
-        foreach (var loopVar in request.mCardDataList)
+        var updateTasks = request.mCardDataList.Select(async loopVar =>
         {
-            CardData cardData = (await HutManager.GetCard(loopVar.mCardId)).Card;
-            cardData.mUsesRemaining--;
-            //Injuries dont exist in NHL 11 HUT
-            // cardData.mInjuryGames = loopVar.mInjuryGames;
-            // cardData.mInjuryType = loopVar.mInjuryType;
-            cardData.mListStats = loopVar.mListStats;
-            await HutCardFactory.CreateOrUpdateCard(cardData, userId);
-        }
+            var cardResult = await HutManager.GetCard(loopVar.mCardId);
+            CardData cardData = cardResult.Card;
 
+            if (_cardsToDecrementContract[userId].Contains(loopVar.mCardId)) cardData.mUsesRemaining--;
+            cardData.mInjuryGames = loopVar.mInjuryGames;
+            cardData.mInjuryType = loopVar.mInjuryType;
+            cardData.mListStats = loopVar.mListStats;
+
+            await HutCardFactory.CreateOrUpdateCard(cardData, userId);
+        });
+
+        await Task.WhenAll(updateTasks);
+        _cardsToDecrementContract.TryRemove(userId, out _);
         return new ChangePlayersResponse();
     }
-
 
     public static CardSubType ToCardSubType(TournamentType type)
     {
@@ -1055,6 +974,9 @@ public class CardHouseComponent : CardHouseComponentBase.Server
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
+
+    private ConcurrentDictionary<long, List<long>> _cardsToDecrementContract = new();
+    private ConcurrentDictionary<long, uint> _userIdStartedTimeStampMap = new();
 
     public override async Task<PlayGameResponse> PlayGameAsync(PlayGameRequest request, BlazeRpcContext context)
     {
@@ -1074,10 +996,26 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         var created = false;
         if (request.mState == PlayGameState.CARDHOUSE_PGSTATE_ENDING)
         {
-            await HutHelper.Deposit(userId, request.mCredits);
+            if (_userIdStartedTimeStampMap.TryRemove(userId, out var startedTimeStamp))
+            {
+                if (UltimateTeam.TimeNowSeconds() >= startedTimeStamp + 600)
+                {
+                    int credits = request.mCredits;
+                    if (_onlineGames.TryRemove(userId, out bool isOnline))
+                    {
+                        if (isOnline)
+                        {
+                            credits *= UltimateTeam.HutConfig.Values[1] / 100;
+                        }
+                    }
+
+                    await HutHelper.Deposit(userId, credits);
+                }
+            }
+
             if (request.mTournamentId >= 1 && request.mMatchResult == MatchResult.CARDHOUSE_MATCHRESULT_WON_CUP)
             {
-                var card = await HutManager.GetCard(8200000 + request.mTournamentId, userId);
+                var card = await HutManager.GetCard((uint)(8200000 + request.mTournamentId), userId);
                 if (card.Card.mCardId == 0)
                 {
                     created = true;
@@ -1090,6 +1028,12 @@ public class CardHouseComponent : CardHouseComponentBase.Server
                     await HutCardFactory.CreateOrUpdateCard(updated, userId, card.DeckType);
                 }
             }
+        }
+
+        if (request.mState == PlayGameState.CARDHOUSE_PGSTATE_STARTING)
+        {
+            _cardsToDecrementContract[userId] = request.mGameCards;
+            _userIdStartedTimeStampMap[userId] = UltimateTeam.TimeNowSeconds();
         }
 
         var generalInfo = await HutManager.GetGeneralInfo(userId);
@@ -1110,9 +1054,9 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     public override async Task<SquadLoadActiveResponse> SquadLoadActiveAsync(SquadLoadActiveRequest request, BlazeRpcContext context)
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
-        var squadInfo = await HutManager.GetSquadInfo(userId);
-        if (squadInfo == null) throw new Exception();
-
+        var squadInfoList = await HutManager.GetSquadList(userId);
+        if (squadInfoList.Count <= 0) throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_UNKNOWN);
+        var activeSquad = squadInfoList[0];
         List<CardData> activeCards = new();
         activeCards.AddRange(await HutManager.GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_BADGE));
         activeCards.AddRange(await HutManager.GetCardList(userId, DeckType.CARDHOUSE_DECK_STICKERBOOK, CardState.CARDHOUSE_CARDSTATE_ACTIVE_AWAY_KIT));
@@ -1122,8 +1066,8 @@ public class CardHouseComponent : CardHouseComponentBase.Server
         return new SquadLoadActiveResponse
         {
             mActiveCards = activeCards,
-            mSquadInfo = squadInfo.Value,
-            mTargetUserId = request.mTargetUserId
+            mSquadInfo = activeSquad,
+            mTargetUserId = request.mTargetUserId,
         };
     }
 
@@ -1131,7 +1075,15 @@ public class CardHouseComponent : CardHouseComponentBase.Server
     {
         var userId = UltimateTeam.Server.GetUserIdByConnectionId(context.Connection.ID);
 
-        var cards = await HutPackFactory.CreatePack(userId, request.mPackType);
+        var pack = UltimateTeam.PackConfig.Packs.FirstOrDefault(pack => pack.PackId.Equals((int)request.mPackType));
+        if (pack == null) throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NOT_IMPLEMENTED);
+
+        if (!await HutHelper.Withdraw(userId, pack.StorePackTypeData.mCoinCost))
+        {
+            throw new BlazeRpcException(Blaze3RpcError.CARDHOUSE_ERR_NOT_ENOUGH_CREDITS);
+        }
+
+        var cards = await HutPackFactory.RollPackAsync(pack, userId);
         var duplicates = await HutManager.FindDuplicates(userId, cards);
 
         var versionInfo = await HutManager.GetVersionInfo(userId);
